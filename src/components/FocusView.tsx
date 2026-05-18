@@ -8,7 +8,6 @@ import {
   type FocusUrgency,
 } from "../lib/db/focus";
 import { FocusTimerBar } from "./FocusTimerBar";
-import { FocusTimerProvider } from "./FocusTimerContext";
 import { FocusTimerShortcuts } from "./FocusTimerShortcuts";
 
 interface FocusViewProps {
@@ -205,13 +204,14 @@ function FocusViewBody({
   );
 }
 
-export function FocusView(props: FocusViewProps) {
-  const [statsTick, setStatsTick] = useState(0);
-
+export function FocusView({
+  statsTick,
+  ...props
+}: FocusViewProps & { statsTick: number }) {
   return (
-    <FocusTimerProvider onStatsChange={() => setStatsTick((t) => t + 1)}>
+    <>
       <FocusTimerShortcuts />
       <FocusViewBody {...props} statsTick={statsTick} />
-    </FocusTimerProvider>
+    </>
   );
 }

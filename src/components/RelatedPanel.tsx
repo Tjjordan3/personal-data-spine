@@ -9,6 +9,7 @@ import { getItemById } from "../lib/db/items";
 import { totalFocusMinutesForTask } from "../lib/db/workBlocks";
 import type { Item } from "../lib/db/types";
 import { ItemEditForm } from "./ItemEditForm";
+import { TaskFocusStartButton } from "./TaskFocusStartButton";
 
 interface RelatedPanelProps {
   item: Item | null;
@@ -17,6 +18,7 @@ interface RelatedPanelProps {
   onSelectItem: (id: string) => void;
   onToast: (message: string, kind: "success" | "error") => void;
   onChanged: () => void;
+  onNavigateToFocus?: () => void;
 }
 
 export function RelatedPanel({
@@ -26,6 +28,7 @@ export function RelatedPanel({
   onSelectItem,
   onToast,
   onChanged,
+  onNavigateToFocus,
 }: RelatedPanelProps) {
   const [related, setRelated] = useState<
     Awaited<ReturnType<typeof getRelatedItems>>
@@ -101,6 +104,7 @@ export function RelatedPanel({
           }}
           onCancel={() => onEditingChange(false)}
           onToast={onToast}
+          onNavigateToFocus={onNavigateToFocus}
         />
       </aside>
     );
@@ -130,6 +134,11 @@ export function RelatedPanel({
           </button>
         </div>
       </div>
+      {item.type === "task" && (
+        <div className="border-b border-pds-border p-3">
+          <TaskFocusStartButton task={item} onNavigateToFocus={onNavigateToFocus} />
+        </div>
+      )}
       <div className="space-y-2 border-b border-pds-border p-3">
         <input
           value={linkTargetId}

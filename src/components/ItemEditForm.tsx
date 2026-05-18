@@ -10,12 +10,14 @@ import {
 } from "../lib/db/projects";
 import { detectTags } from "../lib/tags/keywordTagger";
 import type { Item, ProjectPriority, ProjectStatus } from "../lib/db/types";
+import { TaskFocusStartButton } from "./TaskFocusStartButton";
 
 interface ItemEditFormProps {
   item: Item;
   onSaved: (item: Item) => void;
   onCancel: () => void;
   onToast: (message: string, kind: "success" | "error") => void;
+  onNavigateToFocus?: () => void;
 }
 
 function tagsToString(tags: string[]): string {
@@ -36,6 +38,7 @@ export function ItemEditForm({
   onSaved,
   onCancel,
   onToast,
+  onNavigateToFocus,
 }: ItemEditFormProps) {
   const [content, setContent] = useState(item.content);
   const [tagsInput, setTagsInput] = useState(tagsToString(item.tags));
@@ -187,6 +190,13 @@ export function ItemEditForm({
         </h3>
         <span className="truncate text-[10px] text-pds-subtle">{item.id}</span>
       </div>
+
+      {item.type === "task" && onNavigateToFocus && (
+        <TaskFocusStartButton
+          task={item}
+          onNavigateToFocus={onNavigateToFocus}
+        />
+      )}
 
       <label className="block text-[11px] text-pds-muted">
         {item.type === "subscription" || item.type === "project"

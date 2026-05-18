@@ -44,6 +44,7 @@ export interface FocusTimerContextValue {
   confirmTask: (task: Item) => void;
   setPresetMinutes: (minutes: number, kind?: "focus" | "break") => void;
   startWithCurrentTask: () => Promise<void>;
+  startForTask: (task: Item) => Promise<void>;
   startBreak: () => void;
   togglePause: () => void;
   stopSession: () => Promise<void>;
@@ -380,6 +381,67 @@ export function FocusTimerProvider({
     savePersistedTimer(null);
   }, []);
 
+  const startForTask = useCallback(
+    async (task: Item) => {
+      if (
+        taskId === task.id &&
+        kind === "focus" &&
+        (phase === "running" || phase === "paused")
+      ) {
+        return;
+      }
+
+      const label = taskPreview(task.content);
+      const minutes =
+        kind === "focus" ? plannedMinutes : FOCUS_PRESET_MINUTES;
+
+      const activeOtherFocus =
+        (phase === "running" || phase === "paused") &&
+        kind === "focus" &&
+        taskId !== task.id;
+      const onBreak =
+        phase === "break" || (phase === "paused" && kind === "break");
+
+      if (activeOtherFocus) {
+        if (
+          !window.confirm(
+            "Stop the current focus session and start a new one for this task?",
+          )
+        ) {
+          return;
+        }
+        await completeSession("abandoned");
+      } else if (onBreak) {
+        if (
+          !window.confirm(
+            "End the current break and start focus on this task?",
+          )
+        ) {
+          return;
+        }
+        endBreak();
+      }
+
+      if (phase === "task_pick") {
+        closeTaskPicker();
+      }
+
+      setKind("focus");
+      setPlannedMinutes(minutes);
+      await beginFocusSession(task.id, label, minutes);
+    },
+    [
+      kind,
+      plannedMinutes,
+      phase,
+      taskId,
+      completeSession,
+      endBreak,
+      closeTaskPicker,
+      beginFocusSession,
+    ],
+  );
+
   const resumeLastTask = useCallback(async () => {
     const lastId = loadLastTaskId();
     if (!lastId) return;
@@ -409,6 +471,7 @@ export function FocusTimerProvider({
     confirmTask,
     setPresetMinutes,
     startWithCurrentTask,
+    startForTask,
     startBreak,
     togglePause,
     stopSession,

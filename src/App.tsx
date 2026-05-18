@@ -7,6 +7,7 @@ import { FocusView } from "./components/FocusView";
 import { ProjectsView } from "./components/ProjectsView";
 import { SubscriptionsView } from "./components/SubscriptionsView";
 import { RelatedPanel } from "./components/RelatedPanel";
+import { FocusTimerProvider } from "./components/FocusTimerContext";
 import {
   SearchFacetsBar,
   type FacetState,
@@ -54,6 +55,7 @@ export default function App() {
   const [subscriptionsAddOpen, setSubscriptionsAddOpen] = useState(false);
   const [projectsAddOpen, setProjectsAddOpen] = useState(false);
   const [projectsFocusId, setProjectsFocusId] = useState<string | null>(null);
+  const [focusStatsTick, setFocusStatsTick] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const showToast = useCallback(
@@ -161,6 +163,7 @@ export default function App() {
       : null;
 
   return (
+    <FocusTimerProvider onStatsChange={() => setFocusStatsTick((t) => t + 1)}>
     <div className="flex h-screen flex-col bg-pds-bg text-pds-text">
       <header className="flex items-center gap-3 border-b border-pds-border px-4 py-3">
         <div>
@@ -211,6 +214,7 @@ export default function App() {
 
       {view === "focus" && (
         <FocusView
+          statsTick={focusStatsTick}
           onSelectItem={(id, kind) => {
             if (kind === "project") {
               setProjectsFocusId(id);
@@ -313,6 +317,7 @@ export default function App() {
               }}
               onToast={showToast}
               onChanged={() => void refresh()}
+              onNavigateToFocus={() => setView("focus")}
             />
           </div>
         </div>
@@ -355,5 +360,6 @@ export default function App() {
         </main>
       )}
     </div>
+    </FocusTimerProvider>
   );
 }
