@@ -1,6 +1,8 @@
-# Personal Data Spine (v5)
+# DonePath (v5)
 
-Local-first desktop app built with Tauri 2, React, TypeScript, and SQLite.
+**DonePath** is a local-first desktop app for tasks, meetings, and focus on your computer. Built with Tauri 2, React, TypeScript, and SQLite.
+
+> The git checkout folder is still named `personal-data-spine` for continuity with earlier snapshots.
 
 - **v1 snapshot:** `../personal-data-spine-v1/` and [V1.md](V1.md)
 - **v2 snapshot (frozen):** `../personal-data-spine-v2/` and [V2.md](V2.md)

@@ -168,9 +168,11 @@ export default function App() {
       <header className="flex items-center gap-3 border-b border-pds-border px-4 py-3">
         <div>
           <h1 className="text-sm font-semibold tracking-tight text-pds-text">
-            Personal Data Spine
+            DonePath
           </h1>
-          <p className="text-[10px] text-pds-muted">v5 — meetings hub</p>
+          <p className="text-[10px] text-pds-muted">
+            Local-first tasks, meetings, and focus on your computer
+          </p>
         </div>
         <ThemeToggle compact />
         <nav className="ml-auto flex gap-1">

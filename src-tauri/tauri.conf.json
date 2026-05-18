@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Personal Data Spine",
+  "productName": "DonePath",
   "version": "0.2.0",
   "identifier": "com.tjord.personal-data-spine",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Personal Data Spine",
+        "title": "DonePath",
         "width": 960,
         "height": 640,
         "minWidth": 640,
