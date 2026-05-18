@@ -6,14 +6,16 @@ import { listActiveProjectsForPicker } from "../lib/db/projects";
 import { detectTags } from "../lib/tags/keywordTagger";
 import type { Item, ItemType, ProjectPriority } from "../lib/db/types";
 
+export type QuickCreateItemType = Exclude<ItemType, "work_block">;
+
 interface QuickCreateFormProps {
-  type: ItemType;
+  type: QuickCreateItemType;
   defaultMeetingId?: string | null;
   onCreated: (item: Item) => void;
   onToast: (message: string, kind: "success" | "error") => void;
 }
 
-const TYPE_LABELS: Record<ItemType, string> = {
+const TYPE_LABELS: Record<QuickCreateItemType, string> = {
   note: "note",
   meeting: "meeting",
   task: "task",
@@ -21,7 +23,7 @@ const TYPE_LABELS: Record<ItemType, string> = {
   project: "project",
 };
 
-const DEFAULT_TAGS: Record<ItemType, string[]> = {
+const DEFAULT_TAGS: Record<QuickCreateItemType, string[]> = {
   note: [],
   meeting: ["#meeting"],
   task: ["#task"],

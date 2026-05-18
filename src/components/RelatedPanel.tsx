@@ -6,6 +6,7 @@ import {
   type LinkType,
 } from "../lib/db/links";
 import { getItemById } from "../lib/db/items";
+import { totalFocusMinutesForTask } from "../lib/db/workBlocks";
 import type { Item } from "../lib/db/types";
 import { ItemEditForm } from "./ItemEditForm";
 
@@ -32,6 +33,7 @@ export function RelatedPanel({
   const [linkTargetId, setLinkTargetId] = useState("");
   const [linkType, setLinkType] = useState<LinkType>("related");
   const [loading, setLoading] = useState(false);
+  const [focusMinutes, setFocusMinutes] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
     if (!item) {
@@ -49,6 +51,14 @@ export function RelatedPanel({
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!item || item.type !== "task") {
+      setFocusMinutes(null);
+      return;
+    }
+    void totalFocusMinutesForTask(item.id).then(setFocusMinutes);
+  }, [item]);
 
   async function handleAddLink() {
     if (!item || !linkTargetId.trim()) return;
@@ -106,6 +116,9 @@ export function RelatedPanel({
             </h2>
             <p className="mt-1 truncate text-[11px] text-pds-muted">
               {item.type} · {item.id.slice(0, 8)}…
+              {item.type === "task" && focusMinutes != null && focusMinutes > 0 && (
+                <> · {focusMinutes} min focus</>
+              )}
             </p>
           </div>
           <button

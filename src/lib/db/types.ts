@@ -3,7 +3,23 @@ export type ItemType =
   | "meeting"
   | "task"
   | "subscription"
-  | "project";
+  | "project"
+  | "work_block";
+
+export type WorkBlockStatus = "completed" | "abandoned" | "in_progress";
+
+export type WorkBlockKind = "focus" | "break";
+
+export interface WorkBlockMetadata {
+  task_id: string | null;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  planned_minutes: number;
+  notes: string | null;
+  status: WorkBlockStatus;
+  kind: WorkBlockKind;
+}
 
 export interface Item {
   id: string;

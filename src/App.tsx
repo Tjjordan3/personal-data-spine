@@ -167,7 +167,7 @@ export default function App() {
           <h1 className="text-sm font-semibold tracking-tight text-pds-text">
             Personal Data Spine
           </h1>
-          <p className="text-[10px] text-pds-muted">v3 — focus & themes</p>
+          <p className="text-[10px] text-pds-muted">v4 — focus & pomodoro</p>
         </div>
         <ThemeToggle compact />
         <nav className="ml-auto flex gap-1">

@@ -8,7 +8,8 @@ export type LinkType =
   | "action_of"
   | "has_action"
   | "source"
-  | "references";
+  | "references"
+  | "focus_on";
 
 export interface ItemLink {
   id: string;
@@ -122,6 +123,7 @@ export function linkTypeLabel(linkType: LinkType): string {
     has_action: "has action",
     source: "source",
     references: "references",
+    focus_on: "focus on",
   };
   return labels[linkType] ?? linkType;
 }

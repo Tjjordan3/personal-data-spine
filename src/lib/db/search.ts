@@ -131,7 +131,7 @@ export async function searchWithFacets(
 ): Promise<SearchResult[]> {
   const db = await getDatabase();
   const params: unknown[] = [];
-  const conditions: string[] = [];
+  const conditions: string[] = [`type != 'work_block'`];
   const status = facets.status ?? "active";
 
   if (status !== "all") {

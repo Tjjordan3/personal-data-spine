@@ -1,4 +1,5 @@
 import { listItems } from "./items";
+import { loadFocusTimerStats } from "./workBlocks";
 import { addDaysToKey, daysBetweenKeys, todayKey, toDateKey } from "./dates";
 import {
   formatProjectStatusLabel,
@@ -30,6 +31,8 @@ export interface FocusSummary {
   subscriptionsRenewing: number;
   activeProjects: number;
   projectsDueSoon: number;
+  focusMinutesToday: number;
+  streakDays: number;
 }
 
 const SOON_DAYS = 7;
@@ -135,10 +138,11 @@ export async function loadFocusStream(): Promise<{
   const today = todayKey();
   const soonLimit = addDaysToKey(today, SOON_DAYS);
 
-  const [tasks, subscriptions, projects] = await Promise.all([
+  const [tasks, subscriptions, projects, timerStats] = await Promise.all([
     listItems({ type: "task", status: "active", limit: 500 }),
     listItems({ type: "subscription", status: "active", limit: 200 }),
     listItems({ type: "project", status: "all", limit: 200 }),
+    loadFocusTimerStats(),
   ]);
 
   const eligibleProjects = projects.filter(isFocusEligibleProject);
@@ -235,6 +239,8 @@ export async function loadFocusStream(): Promise<{
       subscriptionsRenewing,
       activeProjects,
       projectsDueSoon,
+      focusMinutesToday: timerStats.focusMinutesToday,
+      streakDays: timerStats.streakDays,
     },
   };
 }
@@ -253,6 +259,14 @@ export function formatFocusSummary(summary: FocusSummary): string {
   if (summary.projectsDueSoon > 0) {
     parts.push(
       `${summary.projectsDueSoon} target${summary.projectsDueSoon === 1 ? "" : "s"} soon`,
+    );
+  }
+  parts.push(
+    `${summary.focusMinutesToday} min focus today`,
+  );
+  if (summary.streakDays > 0) {
+    parts.push(
+      `${summary.streakDays}-day streak`,
     );
   }
   return parts.join(" · ");
