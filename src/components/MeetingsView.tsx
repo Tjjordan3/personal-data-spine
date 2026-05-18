@@ -4,8 +4,8 @@ import { getItemById, getTasksForMeeting, listItems } from "../lib/db/items";
 import { getItemStatus } from "../lib/db/itemStatus";
 import { meetingBodyPreview, meetingTitle } from "../lib/meeting/display";
 import type { Item } from "../lib/db/types";
+import { ItemEditForm } from "./ItemEditForm";
 import { MeetingMode } from "./MeetingMode";
-import { RelatedPanel } from "./RelatedPanel";
 
 interface MeetingsViewProps {
   onToast: (message: string, kind: "success" | "error") => void;
@@ -120,7 +120,7 @@ export function MeetingsView({ onToast }: MeetingsViewProps) {
           )}
           {!loading && !error && meetings.length === 0 && (
             <li className="px-2 py-4 text-[11px] text-pds-muted">
-              No meetings yet. Parse notes on the right.
+              No meetings yet. Click New meeting to add one.
             </li>
           )}
           {meetings.map((item) => {
@@ -162,57 +162,111 @@ export function MeetingsView({ onToast }: MeetingsViewProps) {
         </ul>
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col border-r border-pds-border">
-        <MeetingMode
-          key={composeKey}
-          onSaved={handleSaved}
-          onError={(msg) => onToast(msg, "error")}
-          onSuccess={(msg) => onToast(msg, "success")}
-        />
-      </div>
-
-      <div className="flex min-h-0 shrink-0">
-        {selectedItem?.type === "meeting" && linkedTasks.length > 0 && (
-          <aside className="flex w-48 shrink-0 flex-col border-l border-pds-border">
-            <div className="border-b border-pds-border p-3">
-              <h3 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
-                Linked tasks
-              </h3>
-              <p className="mt-0.5 text-[10px] text-pds-subtle">
-                {linkedTasks.length} task{linkedTasks.length === 1 ? "" : "s"}
-              </p>
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto border-r border-pds-border">
+        {selectedId == null ? (
+          <MeetingMode
+            key={composeKey}
+            onSaved={handleSaved}
+            onError={(msg) => onToast(msg, "error")}
+            onSuccess={(msg) => onToast(msg, "success")}
+          />
+        ) : !selectedItem ? (
+          <p className="p-4 text-sm text-pds-muted">Loading…</p>
+        ) : editing ? (
+          <ItemEditForm
+            item={selectedItem}
+            onSaved={(updated) => {
+              setEditing(false);
+              setSelectedId(updated.id);
+              void refresh();
+            }}
+            onCancel={() => setEditing(false)}
+            onToast={onToast}
+          />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="border-b border-pds-border px-4 py-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-pds-text">
+                    {selectedItem.type === "meeting"
+                      ? meetingTitle(selectedItem)
+                      : "Linked task"}
+                  </h2>
+                  <p className="mt-0.5 text-[11px] text-pds-muted">
+                    {selectedItem.type}
+                    {" · "}
+                    {formatTime(selectedItem.created_at)}
+                    {getItemStatus(selectedItem) !== "active" &&
+                      ` · ${getItemStatus(selectedItem)}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="shrink-0 rounded border border-pds-border px-3 py-1 text-xs text-pds-muted hover:bg-pds-chip"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
-            <ul className="min-h-0 flex-1 overflow-auto p-2">
-              {linkedTasks.map((task) => (
-                <li key={task.id} className="mb-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditing(true);
-                      setSelectedId(task.id);
-                    }}
-                    className="w-full rounded border border-pds-border bg-pds-panel/50 px-2 py-1.5 text-left text-[11px] text-pds-text hover:border-pds-muted"
-                  >
-                    {task.content.slice(0, 80)}
-                    {task.content.length > 80 ? "…" : ""}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </aside>
+            <div className="min-h-0 flex-1 overflow-auto p-4">
+              {selectedItem.type === "meeting" ? (
+                selectedItem.content ? (
+                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-pds-text">
+                    {selectedItem.content}
+                  </pre>
+                ) : (
+                  <p className="text-sm text-pds-muted">No notes.</p>
+                )
+              ) : (
+                <p className="text-sm leading-relaxed text-pds-text">
+                  {selectedItem.content}
+                </p>
+              )}
+              {selectedItem.tags.length > 0 && (
+                <p className="mt-4 text-[11px] text-pds-muted">
+                  {selectedItem.tags.join(" ")}
+                </p>
+              )}
+            </div>
+          </div>
         )}
-        <RelatedPanel
-          item={selectedItem}
-          editing={editing}
-          onEditingChange={setEditing}
-          onSelectItem={(id) => {
-            setEditing(false);
-            setSelectedId(id);
-          }}
-          onToast={onToast}
-          onChanged={() => void refresh()}
-        />
-      </div>
+      </main>
+
+      {selectedItem?.type === "meeting" && linkedTasks.length > 0 && (
+        <aside className="flex w-48 shrink-0 flex-col border-l border-pds-border">
+          <div className="border-b border-pds-border p-3">
+            <h3 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
+              Linked tasks
+            </h3>
+            <p className="mt-0.5 text-[10px] text-pds-subtle">
+              {linkedTasks.length} task{linkedTasks.length === 1 ? "" : "s"}
+            </p>
+          </div>
+          <ul className="min-h-0 flex-1 overflow-auto p-2">
+            {linkedTasks.map((task) => (
+              <li key={task.id} className="mb-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(true);
+                    setSelectedId(task.id);
+                  }}
+                  className={`w-full rounded border px-2 py-1.5 text-left text-[11px] transition ${
+                    selectedId === task.id
+                      ? "border-violet-600 bg-violet-950/30 text-pds-text"
+                      : "border-pds-border bg-pds-panel/50 text-pds-text hover:border-pds-muted"
+                  }`}
+                >
+                  {task.content.slice(0, 80)}
+                  {task.content.length > 80 ? "…" : ""}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
     </div>
   );
 }
