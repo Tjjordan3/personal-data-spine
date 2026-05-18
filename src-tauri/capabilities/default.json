@@ -23,6 +23,9 @@
     "core:window:allow-get-all-windows",
     "core:event:allow-listen",
     "core:event:allow-emit",
-    "core:event:default"
+    "core:event:default",
+    "dialog:default",
+    "fs:default",
+    "fs:allow-write-text-file"
   ]
 }

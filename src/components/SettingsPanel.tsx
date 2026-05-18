@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   DEFAULT_LLM_SETTINGS,
@@ -6,6 +6,12 @@ import {
   saveLlmSettings,
   type LlmSettings,
 } from "../lib/meeting/llmRefiner";
+import {
+  exportJsonBackup,
+  exportSqliteBackup,
+  formatLastBackup,
+  importSqliteRestore,
+} from "../lib/backup";
 import {
   loadSettings,
   saveSettings,
@@ -18,9 +24,14 @@ import { ThemeToggle } from "./ThemeToggle";
 interface SettingsPanelProps {
   onClose: () => void;
   onToast: (message: string, kind: "success" | "error") => void;
+  onDataRestored?: () => void;
 }
 
-export function SettingsPanel({ onClose, onToast }: SettingsPanelProps) {
+export function SettingsPanel({
+  onClose,
+  onToast,
+  onDataRestored,
+}: SettingsPanelProps) {
   const [appSettings, setAppSettings] = useState<AppSettings>(() =>
     loadSettings(),
   );
@@ -28,6 +39,11 @@ export function SettingsPanel({ onClose, onToast }: SettingsPanelProps) {
     loadLlmSettings(),
   );
   const [dbPath, setDbPath] = useState("");
+  const [backupBusy, setBackupBusy] = useState(false);
+
+  useEffect(() => {
+    void loadDbPath();
+  }, []);
 
   async function loadDbPath() {
     try {
@@ -53,18 +69,64 @@ export function SettingsPanel({ onClose, onToast }: SettingsPanelProps) {
     }
   }
 
-  async function exportDatabase() {
-    const destination =
-      appSettings.exportPath.trim() ||
-      `${dbPath.replace(/personal_spine\.db$/i, "")}personal_spine_backup.db`;
+  async function handleExportSqlite() {
+    setBackupBusy(true);
     try {
-      await invoke("export_database", { destination });
-      onToast(`Database exported to ${destination}`, "success");
+      const path = await exportSqliteBackup();
+      if (path) {
+        setAppSettings(loadSettings());
+        onToast(`SQLite backup saved.`, "success");
+      }
     } catch (err) {
       onToast(
         err instanceof Error ? err.message : "Export failed",
         "error",
       );
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  async function handleExportJson() {
+    setBackupBusy(true);
+    try {
+      const path = await exportJsonBackup();
+      if (path) {
+        setAppSettings(loadSettings());
+        onToast(`JSON export saved.`, "success");
+      }
+    } catch (err) {
+      onToast(
+        err instanceof Error ? err.message : "JSON export failed",
+        "error",
+      );
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  async function handleRestore() {
+    const ok = window.confirm(
+      "Restore will replace your entire local database with the chosen backup file. " +
+        "All current data will be overwritten. This cannot be undone.\n\n" +
+        "Continue?",
+    );
+    if (!ok) return;
+    setBackupBusy(true);
+    try {
+      const restored = await importSqliteRestore();
+      if (!restored) return;
+      setAppSettings(loadSettings());
+      onToast("Database restored. Reloading…", "success");
+      onDataRestored?.();
+      window.setTimeout(() => window.location.reload(), 600);
+    } catch (err) {
+      onToast(
+        err instanceof Error ? err.message : "Restore failed",
+        "error",
+      );
+    } finally {
+      setBackupBusy(false);
     }
   }
 
@@ -157,36 +219,51 @@ export function SettingsPanel({ onClose, onToast }: SettingsPanelProps) {
 
       <section className="space-y-2 rounded-lg border border-pds-border p-3">
         <h3 className="text-xs font-medium uppercase tracking-wide text-pds-muted">
-          Database
+          Backup &amp; data
         </h3>
-        <button
-          type="button"
-          onClick={() => void loadDbPath()}
-          className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted"
-        >
-          Show DB path
-        </button>
+        <p className="text-[11px] text-pds-subtle">
+          Your data lives in a local SQLite file. Export regularly; restore
+          replaces the entire database.
+        </p>
         {dbPath && (
-          <p className="break-all text-[11px] text-pds-muted">{dbPath}</p>
+          <p className="break-all text-[11px] text-pds-muted">
+            <span className="font-medium text-pds-text">Database: </span>
+            {dbPath}
+          </p>
         )}
-        <label className="block text-xs text-pds-muted">
-          Export destination path
-          <input
-            value={appSettings.exportPath}
-            onChange={(e) =>
-              setAppSettings((s) => ({ ...s, exportPath: e.target.value }))
-            }
-            placeholder="C:\Users\you\Desktop\personal_spine_backup.db"
-            className="mt-1 w-full rounded border border-pds-border bg-pds-input px-2 py-1.5 text-sm text-pds-text"
-          />
-        </label>
-        <button
-          type="button"
-          onClick={() => void exportDatabase()}
-          className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted"
-        >
-          Export backup
-        </button>
+        <p className="text-[11px] text-pds-muted">
+          Last backup: {formatLastBackup(appSettings.lastBackupAt)}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={backupBusy}
+            onClick={() => void handleExportSqlite()}
+            className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted disabled:opacity-50"
+          >
+            Export SQLite backup
+          </button>
+          <button
+            type="button"
+            disabled={backupBusy}
+            onClick={() => void handleExportJson()}
+            className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted disabled:opacity-50"
+          >
+            Export JSON
+          </button>
+          <button
+            type="button"
+            disabled={backupBusy}
+            onClick={() => void handleRestore()}
+            className="rounded border border-red-800/60 px-3 py-1.5 text-xs text-red-400 disabled:opacity-50"
+          >
+            Import / restore…
+          </button>
+        </div>
+        <p className="text-[11px] text-red-400/90">
+          Restore is destructive: it overwrites your current database with the
+          selected file. Export first if unsure.
+        </p>
       </section>
 
       <section className="space-y-2 rounded-lg border border-pds-border p-3">

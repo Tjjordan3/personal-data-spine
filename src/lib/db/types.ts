@@ -36,6 +36,10 @@ export interface TaskMetadata {
   owner: string | null;
   due_date: string | null;
   project_id?: string | null;
+  /** Hide from Focus until this calendar date (YYYY-MM-DD), inclusive. */
+  snoozed_until?: string | null;
+  /** One-line outcome note when marking done from Focus. */
+  outcome?: string | null;
 }
 
 export interface MeetingMetadata {

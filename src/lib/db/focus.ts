@@ -37,6 +37,14 @@ export interface FocusSummary {
 
 const SOON_DAYS = 7;
 
+function isTaskSnoozed(item: Item, today: string): boolean {
+  const until = item.metadata.snoozed_until as string | undefined;
+  if (!until) return false;
+  const key = toDateKey(until);
+  if (!key) return false;
+  return key >= today;
+}
+
 function urgencySort(urgency: FocusUrgency): number {
   switch (urgency) {
     case "overdue":
@@ -157,6 +165,7 @@ export async function loadFocusStream(): Promise<{
   let projectsDueSoon = 0;
 
   for (const item of tasks) {
+    if (isTaskSnoozed(item, today)) continue;
     const due = item.metadata.due_date as string | undefined;
     if (!due) continue;
     const key = toDateKey(due);
@@ -270,4 +279,11 @@ export function formatFocusSummary(summary: FocusSummary): string {
     );
   }
   return parts.join(" · ");
+}
+
+/** Top task for "Start next" — overdue/today first, then soon. */
+export function pickNextFocusTask(entries: FocusEntry[]): FocusEntry | null {
+  const tasks = entries.filter((e) => e.kind === "task");
+  if (tasks.length === 0) return null;
+  return tasks[0];
 }

@@ -116,6 +116,20 @@ export async function getRelatedItems(itemId: string): Promise<
   return related;
 }
 
+export async function listAllLinks(): Promise<ItemLink[]> {
+  await ensureItemLinksTable();
+  const db = await getDatabase();
+  const rows = await db.select<LinkRow[]>(
+    `SELECT id, from_id, to_id, link_type, created_at
+     FROM item_links
+     ORDER BY created_at ASC`,
+  );
+  return rows.map((row) => ({
+    ...row,
+    link_type: row.link_type as LinkType,
+  }));
+}
+
 export function linkTypeLabel(linkType: LinkType): string {
   const labels: Record<LinkType, string> = {
     related: "related",

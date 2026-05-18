@@ -45,7 +45,15 @@ fn get_db_path(app: tauri::AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 fn export_database(app: tauri::AppHandle, destination: String) -> Result<(), String> {
-    let source = get_db_path(app)?;
+    let source = get_db_path(app.clone())?;
+    fs::copy(&source, &destination)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn import_database(app: tauri::AppHandle, source: String) -> Result<(), String> {
+    let destination = get_db_path(app)?;
     fs::copy(&source, &destination)
         .map(|_| ())
         .map_err(|e| e.to_string())
@@ -113,13 +121,16 @@ fn parse_accelerator(accelerator: &str) -> Result<Shortcut, String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             show_capture,
             register_shortcut,
             get_db_path,
-            export_database
+            export_database,
+            import_database
         ])
         .setup(|app| {
             let handle = app.handle().clone();

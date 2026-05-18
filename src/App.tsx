@@ -14,19 +14,18 @@ import {
 } from "./components/SearchFacetsBar";
 import { QuickCreateForm } from "./components/QuickCreateForm";
 import { SettingsPanel } from "./components/SettingsPanel";
+import {
+  CommandPalette,
+  useCommandPaletteShortcut,
+  type AppView,
+} from "./components/CommandPalette";
 import { ThemeToggle } from "./components/ThemeToggle";
 import type { ItemType } from "./lib/db/types";
 import { getItemById } from "./lib/db/items";
 import { searchWithFacets, type SearchResult } from "./lib/db/search";
 import type { Item } from "./lib/db/types";
 
-type View =
-  | "focus"
-  | "inbox"
-  | "subscriptions"
-  | "projects"
-  | "meeting"
-  | "settings";
+type View = AppView;
 
 const DEFAULT_FACETS: FacetState = {
   query: "",
@@ -56,7 +55,10 @@ export default function App() {
   const [projectsAddOpen, setProjectsAddOpen] = useState(false);
   const [projectsFocusId, setProjectsFocusId] = useState<string | null>(null);
   const [focusStatsTick, setFocusStatsTick] = useState(0);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useCommandPaletteShortcut(() => setCommandPaletteOpen(true));
 
   const showToast = useCallback(
     (message: string, kind: "success" | "error") => {
@@ -217,6 +219,7 @@ export default function App() {
       {view === "focus" && (
         <FocusView
           statsTick={focusStatsTick}
+          onToast={showToast}
           onSelectItem={(id, kind) => {
             if (kind === "project") {
               setProjectsFocusId(id);
@@ -357,6 +360,16 @@ export default function App() {
           />
         </main>
       )}
+
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        actions={{
+          setView,
+          openInboxQuickCreate,
+          openInboxWithSelection,
+        }}
+      />
     </div>
     </FocusTimerProvider>
   );

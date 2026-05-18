@@ -4,15 +4,19 @@ import { invoke } from "@tauri-apps/api/core";
 import {
   formatFocusSummary,
   loadFocusStream,
+  pickNextFocusTask,
   type FocusEntry,
   type FocusUrgency,
 } from "../lib/db/focus";
 import { FocusTimerBar } from "./FocusTimerBar";
 import { FocusTimerShortcuts } from "./FocusTimerShortcuts";
+import { FocusTaskActions } from "./FocusTaskActions";
+import { useFocusTimer } from "./FocusTimerContext";
 
 interface FocusViewProps {
   onSelectItem: (id: string, kind: FocusEntry["kind"]) => void;
   onQuickCreate: (type: "task" | "subscription" | "project" | "note") => void;
+  onToast?: (message: string, kind: "success" | "error") => void;
 }
 
 function urgencyLabel(urgency: FocusUrgency): string {
@@ -59,8 +63,10 @@ function preview(content: string, max = 120): string {
 function FocusViewBody({
   onSelectItem,
   onQuickCreate,
+  onToast,
   statsTick,
 }: FocusViewProps & { statsTick: number }) {
+  const timer = useFocusTimer();
   const [entries, setEntries] = useState<FocusEntry[]>([]);
   const [summaryLine, setSummaryLine] = useState("");
   const [loading, setLoading] = useState(true);
@@ -101,11 +107,42 @@ function FocusViewBody({
     }
   }
 
+  async function handleStartNext() {
+    const next = pickNextFocusTask(entries);
+    if (!next) {
+      onToast?.("No tasks in focus stream.", "error");
+      return;
+    }
+    try {
+      await timer.startForTask(next.item);
+    } catch (err) {
+      onToast?.(
+        err instanceof Error ? err.message : "Could not start focus",
+        "error",
+      );
+    }
+  }
+
+  const hasNextTask = pickNextFocusTask(entries) != null;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="border-b border-pds-border px-4 py-4">
-        <h2 className="text-sm font-semibold text-pds-text">Today</h2>
-        <p className="mt-1 text-xs text-pds-muted">{summaryLine}</p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold text-pds-text">Today</h2>
+            <p className="mt-1 text-xs text-pds-muted">{summaryLine}</p>
+          </div>
+          {hasNextTask && (
+            <button
+              type="button"
+              onClick={() => void handleStartNext()}
+              className="shrink-0 rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500"
+            >
+              Start next
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto">
@@ -161,38 +198,47 @@ function FocusViewBody({
           <ul className="divide-y divide-pds-border px-2 py-2">
             {entries.map((entry) => (
               <li key={`${entry.kind}-${entry.item.id}`}>
-                <button
-                  type="button"
-                  onClick={() => onSelectItem(entry.item.id, entry.kind)}
-                  className="flex w-full flex-col gap-1 rounded-lg px-3 py-3 text-left transition hover:bg-pds-panel"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${urgencyClass(entry.urgency)}`}
-                    >
-                      {urgencyLabel(entry.urgency)}
-                    </span>
-                    <span className="rounded bg-pds-chip px-1.5 py-0.5 text-[10px] text-pds-chip-fg">
-                      {kindLabel(entry.kind)}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium text-pds-text">
-                    {preview(entry.item.content)}
-                  </span>
-                  {(entry.kind === "subscription" ||
-                    entry.kind === "project") &&
-                    (entry.item.metadata.notes as string | undefined)?.trim() && (
-                      <span className="text-[11px] leading-snug text-pds-subtle">
-                        {preview(
-                          (entry.item.metadata.notes as string).trim(),
-                          120,
-                        )}
+                <div className="flex w-full flex-col gap-1 rounded-lg px-3 py-3 transition hover:bg-pds-panel">
+                  <button
+                    type="button"
+                    onClick={() => onSelectItem(entry.item.id, entry.kind)}
+                    className="flex w-full flex-col gap-1 text-left"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${urgencyClass(entry.urgency)}`}
+                      >
+                        {urgencyLabel(entry.urgency)}
                       </span>
-                    )}
-                  <span className="text-[11px] text-pds-muted">
-                    {entry.detail}
-                  </span>
-                </button>
+                      <span className="rounded bg-pds-chip px-1.5 py-0.5 text-[10px] text-pds-chip-fg">
+                        {kindLabel(entry.kind)}
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-pds-text">
+                      {preview(entry.item.content)}
+                    </span>
+                    {(entry.kind === "subscription" ||
+                      entry.kind === "project") &&
+                      (entry.item.metadata.notes as string | undefined)?.trim() && (
+                        <span className="text-[11px] leading-snug text-pds-subtle">
+                          {preview(
+                            (entry.item.metadata.notes as string).trim(),
+                            120,
+                          )}
+                        </span>
+                      )}
+                    <span className="text-[11px] text-pds-muted">
+                      {entry.detail}
+                    </span>
+                  </button>
+                  {entry.kind === "task" && (
+                    <FocusTaskActions
+                      task={entry.item}
+                      onChanged={() => void refresh()}
+                      onToast={onToast}
+                    />
+                  )}
+                </div>
               </li>
             ))}
           </ul>

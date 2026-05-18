@@ -7,6 +7,8 @@ export interface AppSettings {
   exportPath: string;
   theme: ThemePreference;
   timerChime: boolean;
+  /** ISO timestamp of last successful backup (SQLite and/or JSON). */
+  lastBackupAt?: string | null;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -14,6 +16,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   exportPath: "",
   theme: "system",
   timerChime: true,
+  lastBackupAt: null,
 };
 
 export function loadSettings(): AppSettings {
