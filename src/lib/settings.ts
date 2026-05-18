@@ -6,12 +6,14 @@ export interface AppSettings {
   captureShortcut: string;
   exportPath: string;
   theme: ThemePreference;
+  timerChime: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   captureShortcut: "Alt+Shift+Space",
   exportPath: "",
   theme: "system",
+  timerChime: true,
 };
 
 export function loadSettings(): AppSettings {

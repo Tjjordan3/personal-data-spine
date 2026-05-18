@@ -106,6 +106,27 @@ export function SettingsPanel({ onClose, onToast }: SettingsPanelProps) {
 
       <section className="space-y-2 rounded-lg border border-pds-border p-3">
         <h3 className="text-xs font-medium uppercase tracking-wide text-pds-muted">
+          Focus / timer
+        </h3>
+        <label className="flex items-center gap-2 text-xs text-pds-muted">
+          <input
+            type="checkbox"
+            checked={appSettings.timerChime}
+            onChange={(e) =>
+              setAppSettings((s) => ({ ...s, timerChime: e.target.checked }))
+            }
+          />
+          Play chime when a focus or break timer finishes
+        </label>
+        <p className="text-[11px] text-pds-subtle">
+          Chimes only play when the countdown reaches zero (not when you stop
+          early). Some browsers require a click or keypress in the app before
+          audio works in a background tab.
+        </p>
+      </section>
+
+      <section className="space-y-2 rounded-lg border border-pds-border p-3">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-pds-muted">
           Quick capture
         </h3>
         <label className="block text-xs text-pds-muted">

@@ -26,6 +26,7 @@ import {
   type PersistedTimerState,
   type TimerPhase,
 } from "../lib/focus/timer";
+import { playTimerChime, unlockTimerAudio } from "../lib/focus/chime";
 
 export interface FocusTimerContextValue {
   phase: TimerPhase;
@@ -90,6 +91,7 @@ export function FocusTimerProvider({
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [tick, setTick] = useState(0);
   const completingRef = useRef(false);
+  const expiryHandledRef = useRef(false);
   const [hasLastTask, setHasLastTask] = useState(() => Boolean(loadLastTaskId()));
 
   const persist = useCallback(
@@ -173,8 +175,10 @@ export function FocusTimerProvider({
       setWorkBlockId(block.id);
       setEndsAt(end);
       setPausedRemaining(null);
+      expiryHandledRef.current = false;
       setPhase("running");
       setShowTaskPicker(false);
+      unlockTimerAudio();
       persist({
         phase: "running",
         taskId: id,
@@ -199,7 +203,9 @@ export function FocusTimerProvider({
       setWorkBlockId(null);
       setEndsAt(end);
       setPausedRemaining(null);
+      expiryHandledRef.current = false;
       setPhase("break");
+      unlockTimerAudio();
       persist({
         phase: "break",
         taskId: null,
@@ -241,11 +247,15 @@ export function FocusTimerProvider({
     if (!endsAt || pausedRemaining != null) return;
     const left = remainingSeconds(endsAt);
     if (left <= 0) {
+      if (expiryHandledRef.current) return;
+      expiryHandledRef.current = true;
       if (kind === "focus") {
+        playTimerChime("focus_complete");
         void completeSession("completed").then(() =>
           beginBreak(BREAK_PRESET_MINUTES),
         );
       } else {
+        playTimerChime("break_complete");
         setPhase("idle");
         setEndsAt(null);
         savePersistedTimer(null);
@@ -350,6 +360,7 @@ export function FocusTimerProvider({
   }, [phase, endsAt, plannedMinutes, pausedRemaining, kind, persist]);
 
   const stopSession = useCallback(async () => {
+    expiryHandledRef.current = false;
     if (kind === "focus" && (phase === "running" || phase === "paused")) {
       await completeSession("abandoned");
     } else {
@@ -361,6 +372,7 @@ export function FocusTimerProvider({
   }, [kind, phase, completeSession]);
 
   const endBreak = useCallback(() => {
+    expiryHandledRef.current = false;
     setPhase("idle");
     setEndsAt(null);
     setPausedRemaining(null);
