@@ -2,11 +2,58 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --pds-bg: #fafafa;
+  --pds-panel: #ffffff;
+  --pds-panel-2: #f4f4f5;
+  --pds-border: #e4e4e7;
+  --pds-text: #18181b;
+  --pds-muted: #71717a;
+  --pds-subtle: #a1a1aa;
+  --pds-input: #ffffff;
+  --pds-accent-bg: #18181b;
+  --pds-accent-fg: #fafafa;
+  --pds-chip: #f4f4f5;
+  --pds-chip-fg: #3f3f46;
+  --pds-hover: #27272a;
+}
+
+.dark {
+  --pds-bg: #09090b;
+  --pds-panel: #18181b;
+  --pds-panel-2: #09090b;
+  --pds-border: #27272a;
+  --pds-text: #f4f4f5;
+  --pds-muted: #a1a1aa;
+  --pds-subtle: #71717a;
+  --pds-input: #09090b;
+  --pds-accent-bg: #f4f4f5;
+  --pds-accent-fg: #18181b;
+  --pds-chip: #27272a;
+  --pds-chip-fg: #d4d4d8;
+  --pds-hover: #e4e4e7;
+}
+
+@theme {
+  --color-pds-bg: var(--pds-bg);
+  --color-pds-panel: var(--pds-panel);
+  --color-pds-panel-2: var(--pds-panel-2);
+  --color-pds-border: var(--pds-border);
+  --color-pds-text: var(--pds-text);
+  --color-pds-muted: var(--pds-muted);
+  --color-pds-subtle: var(--pds-subtle);
+  --color-pds-input: var(--pds-input);
+  --color-pds-accent: var(--pds-accent-bg);
+  --color-pds-accent-fg: var(--pds-accent-fg);
+  --color-pds-chip: var(--pds-chip);
+  --color-pds-chip-fg: var(--pds-chip-fg);
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #09090b;
-  color: #f4f4f5;
+  background-color: var(--pds-bg);
+  color: var(--pds-text);
   -webkit-font-smoothing: antialiased;
 }
 

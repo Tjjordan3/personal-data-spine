@@ -4,8 +4,10 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import App from "./App";
 import { Capture } from "./windows/Capture";
 import "./index.css";
+import { initTheme } from "./lib/theme";
 
 async function bootstrap() {
+  initTheme();
   const label = getCurrentWindow().label;
   const root = document.getElementById("root")!;
 

@@ -1,4 +1,5 @@
 import { getDatabase } from "./database";
+import { deleteLinksForItem, linkMeetingTask } from "./links";
 import type { ItemStatus } from "./itemStatus";
 import type { Item, ItemType, NewItem } from "./types";
 
@@ -75,6 +76,7 @@ export async function getItemById(id: string): Promise<Item | null> {
 
 export async function deleteItem(id: string): Promise<void> {
   const db = await getDatabase();
+  await deleteLinksForItem(id);
   await db.execute("DELETE FROM items WHERE id = $1", [id]);
 }
 
@@ -86,6 +88,42 @@ export async function deleteMeetingWithTasks(meetingId: string): Promise<number>
   }
   await db.execute("DELETE FROM items WHERE id = $1", [meetingId]);
   return tasks.length + 1;
+}
+
+export interface UpdateItemInput {
+  content?: string;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export async function updateItem(
+  id: string,
+  patch: UpdateItemInput,
+): Promise<Item> {
+  const item = await getItemById(id);
+  if (!item) {
+    throw new Error("Item not found");
+  }
+
+  const content = patch.content !== undefined ? patch.content : item.content;
+  const tags = JSON.stringify(patch.tags ?? item.tags);
+  const metadata = JSON.stringify({
+    ...item.metadata,
+    ...(patch.metadata ?? {}),
+    updated_at: new Date().toISOString(),
+  });
+
+  const db = await getDatabase();
+  await db.execute(
+    "UPDATE items SET content = $1, tags = $2, metadata = $3 WHERE id = $4",
+    [content, tags, metadata, id],
+  );
+
+  const updated = await getItemById(id);
+  if (!updated) {
+    throw new Error("Item not found after update");
+  }
+  return updated;
 }
 
 export async function setItemStatus(
@@ -105,6 +143,7 @@ export async function setItemStatus(
     metadata.status = status;
     metadata.marked_at = new Date().toISOString();
   }
+  metadata.updated_at = new Date().toISOString();
 
   const db = await getDatabase();
   await db.execute("UPDATE items SET metadata = $1 WHERE id = $2", [
@@ -201,6 +240,17 @@ export async function saveMeetingWithTasks(
     due_date: string | null;
   }>,
 ): Promise<{ meeting: Item; tasks: Item[] }> {
+  const normalizedTasks = tasks
+    .map((t) => ({
+      ...t,
+      content: t.content.trim(),
+    }))
+    .filter((t) => t.content.length > 0);
+
+  if (normalizedTasks.length === 0) {
+    throw new Error("Add at least one action with text before saving.");
+  }
+
   const meetingId = crypto.randomUUID();
   const parsed_at = new Date().toISOString();
 
@@ -210,11 +260,11 @@ export async function saveMeetingWithTasks(
     content: meetingContent,
     tags: ["#meeting"],
     source: "meeting-mode",
-    metadata: { parsed_at, task_count: tasks.length },
+    metadata: { parsed_at, task_count: normalizedTasks.length },
   });
 
   const savedTasks: Item[] = [];
-  for (const task of tasks) {
+  for (const task of normalizedTasks) {
     const saved = await insertItem({
       type: "task",
       content: task.content,
@@ -222,10 +272,15 @@ export async function saveMeetingWithTasks(
       source: "meeting-mode",
       metadata: {
         meeting_id: meetingId,
-        owner: task.owner,
-        due_date: task.due_date,
+        owner: task.owner?.trim() || null,
+        due_date: task.due_date?.trim() || null,
       },
     });
+    try {
+      await linkMeetingTask(meetingId, saved.id);
+    } catch (linkError) {
+      console.warn("Could not create item_links row:", linkError);
+    }
     savedTasks.push(saved);
   }
 

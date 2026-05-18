@@ -22,8 +22,8 @@
       {
         "label": "capture",
         "title": "Capture",
-        "width": 420,
-        "height": 120,
+        "width": 440,
+        "height": 200,
         "decorations": false,
         "transparent": true,
         "shadow": false,

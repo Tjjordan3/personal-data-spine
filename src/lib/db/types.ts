@@ -1,4 +1,9 @@
-export type ItemType = "note" | "meeting" | "task";
+export type ItemType =
+  | "note"
+  | "meeting"
+  | "task"
+  | "subscription"
+  | "project";
 
 export interface Item {
   id: string;
@@ -11,14 +16,45 @@ export interface Item {
 }
 
 export interface TaskMetadata {
-  meeting_id: string;
+  meeting_id: string | null;
   owner: string | null;
   due_date: string | null;
+  project_id?: string | null;
 }
 
 export interface MeetingMetadata {
   parsed_at?: string;
   task_count?: number;
+}
+
+export interface SubscriptionMetadata {
+  renewal_date: string | null;
+  amount?: number | string | null;
+  cadence?: string | null;
+  status?: string | null;
+  category?: string | null;
+  service?: string | null;
+  /** Free-text notes (e.g. cancel reminders); not shown in title/content. */
+  notes?: string | null;
+}
+
+export type ProjectStatus =
+  | "active"
+  | "done"
+  | "archived"
+  | "on_hold"
+  | "planning";
+
+export type ProjectPriority = "low" | "medium" | "high";
+
+export interface ProjectMetadata {
+  status?: ProjectStatus | string;
+  notes?: string | null;
+  priority?: ProjectPriority | null;
+  area?: string | null;
+  target_date?: string | null;
+  started_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface NewItem {

@@ -1,13 +1,17 @@
 export const SETTINGS_KEY = "pds-settings";
 
+export type ThemePreference = "light" | "dark" | "system";
+
 export interface AppSettings {
   captureShortcut: string;
   exportPath: string;
+  theme: ThemePreference;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   captureShortcut: "Alt+Shift+Space",
   exportPath: "",
+  theme: "system",
 };
 
 export function loadSettings(): AppSettings {

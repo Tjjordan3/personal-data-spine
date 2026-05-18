@@ -1,31 +1,6 @@
 use std::fs;
 use tauri::{Emitter, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
-use tauri_plugin_sql::{Migration, MigrationKind};
-
-const DB_NAME: &str = "sqlite:personal_spine.db";
-
-fn migrations() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "create_items_table",
-        sql: r"
-            CREATE TABLE IF NOT EXISTS items (
-                id         TEXT PRIMARY KEY NOT NULL,
-                type       TEXT NOT NULL,
-                content    TEXT NOT NULL,
-                tags       TEXT NOT NULL DEFAULT '[]',
-                created_at TEXT NOT NULL,
-                source     TEXT NOT NULL DEFAULT '',
-                metadata   TEXT NOT NULL DEFAULT '{}'
-            );
-            CREATE INDEX IF NOT EXISTS idx_items_type ON items(type);
-            CREATE INDEX IF NOT EXISTS idx_items_created_at ON items(created_at DESC);
-        ",
-        kind: MigrationKind::Up,
-    }]
-}
-
 fn show_capture_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("capture") {
         let _ = window.show();
@@ -45,6 +20,11 @@ fn register_capture_shortcut(app: &tauri::AppHandle, shortcut: Shortcut) -> Resu
             }
         })
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn show_capture(app: tauri::AppHandle) {
+    show_capture_window(&app);
 }
 
 #[tauri::command]
@@ -131,17 +111,12 @@ fn parse_accelerator(accelerator: &str) -> Result<Shortcut, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let migrations = migrations();
-
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(
-            tauri_plugin_sql::Builder::default()
-                .add_migrations(DB_NAME, migrations)
-                .build(),
-        )
+        .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
+            show_capture,
             register_shortcut,
             get_db_path,
             export_database

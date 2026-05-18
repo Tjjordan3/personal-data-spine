@@ -1,43 +1,59 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { GraphView } from "./components/GraphView";
 import { ItemList } from "./components/ItemList";
 import { MeetingMode } from "./components/MeetingMode";
+import { FocusView } from "./components/FocusView";
+import { ProjectsView } from "./components/ProjectsView";
+import { SubscriptionsView } from "./components/SubscriptionsView";
+import { RelatedPanel } from "./components/RelatedPanel";
+import {
+  SearchFacetsBar,
+  type FacetState,
+} from "./components/SearchFacetsBar";
+import { QuickCreateForm } from "./components/QuickCreateForm";
 import { SettingsPanel } from "./components/SettingsPanel";
-import type { ItemStatus } from "./lib/db/itemStatus";
-import { listItems, searchItems } from "./lib/db/items";
-import type { Item, ItemType } from "./lib/db/types";
+import { ThemeToggle } from "./components/ThemeToggle";
+import type { ItemType } from "./lib/db/types";
+import { getItemById } from "./lib/db/items";
+import { searchWithFacets, type SearchResult } from "./lib/db/search";
+import type { Item } from "./lib/db/types";
 
-type View = "inbox" | "meeting" | "settings";
+type View =
+  | "focus"
+  | "inbox"
+  | "subscriptions"
+  | "projects"
+  | "meeting"
+  | "settings";
 
-const TYPE_FILTERS: Array<{ label: string; value: ItemType | "all" }> = [
-  { label: "All", value: "all" },
-  { label: "Notes", value: "note" },
-  { label: "Meetings", value: "meeting" },
-  { label: "Tasks", value: "task" },
-];
-
-const TAG_FILTERS = [
-  "all",
-  "#urgent",
-  "#meeting",
-  "#task",
-  "#bug",
-  "#idea",
-] as const;
+const DEFAULT_FACETS: FacetState = {
+  query: "",
+  type: "all",
+  tag: "all",
+  status: "active",
+  dateFrom: "",
+  dateTo: "",
+  dueSoon: false,
+};
 
 export default function App() {
-  const [view, setView] = useState<View>("inbox");
-  const [items, setItems] = useState<Item[]>([]);
+  const [view, setView] = useState<View>("focus");
+  const [facets, setFacets] = useState<FacetState>(DEFAULT_FACETS);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<ItemType | "all">("all");
-  const [tagFilter, setTagFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<ItemStatus | "all">("active");
   const [toast, setToast] = useState<{
     message: string;
     kind: "success" | "error";
   } | null>(null);
+  const [subscriptionsAddOpen, setSubscriptionsAddOpen] = useState(false);
+  const [projectsAddOpen, setProjectsAddOpen] = useState(false);
+  const [projectsFocusId, setProjectsFocusId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const showToast = useCallback(
@@ -52,46 +68,64 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      let data: Item[];
-      if (query.trim()) {
-        data = await searchItems(query.trim(), statusFilter);
-      } else {
-        data = await listItems({
-          type: typeFilter === "all" ? undefined : typeFilter,
-          tag: tagFilter === "all" ? undefined : tagFilter,
-          status: statusFilter,
-        });
+      const data = await searchWithFacets({
+        query: facets.query,
+        type: facets.type,
+        tag: facets.tag,
+        status: facets.status,
+        dateFrom: facets.dateFrom || undefined,
+        dateTo: facets.dateTo || undefined,
+        dueSoon: facets.dueSoon,
+      });
+      setResults(data);
+      if (selectedId) {
+        const item = await getItemById(selectedId);
+        setSelectedItem(item);
       }
-      if (query.trim() && typeFilter !== "all") {
-        data = data.filter((item) => item.type === typeFilter);
-      }
-      if (query.trim() && tagFilter !== "all") {
-        data = data.filter((item) =>
-          item.tags.some(
-            (t) => t.toLowerCase() === tagFilter.toLowerCase(),
-          ),
-        );
-      }
-      setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load items");
     } finally {
       setLoading(false);
     }
-  }, [query, typeFilter, tagFilter, statusFilter]);
+  }, [facets, selectedId]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (view === "inbox") void refresh();
+  }, [refresh, view]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSelectedItem(null);
+      setEditing(false);
+      return;
+    }
+    void getItemById(selectedId).then(setSelectedItem);
+  }, [selectedId]);
+
+  function handleEditItem(id: string) {
+    setSelectedId(id);
+    setEditing(true);
+  }
+
+  function openInboxWithSelection(id: string) {
+    setSelectedId(id);
+    setEditing(false);
+    setView("inbox");
+  }
+
+  function openInboxQuickCreate(type: ItemType) {
+    setFacets((prev) => ({ ...prev, type, status: "active" }));
+    setView("inbox");
+  }
 
   useEffect(() => {
     const unlisten = listen("item:saved", () => {
-      void refresh();
+      if (view === "inbox") void refresh();
     });
     return () => {
       void unlisten.then((fn) => fn());
     };
-  }, [refresh]);
+  }, [refresh, view]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -104,20 +138,45 @@ export default function App() {
         searchRef.current?.focus();
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
   }, [view]);
 
+  function patchFacets(patch: Partial<FacetState>) {
+    setFacets((prev) => ({ ...prev, ...patch }));
+  }
+
+  const quickCreateType: ItemType | null =
+    facets.type === "note" ||
+    facets.type === "meeting" ||
+    facets.type === "task" ||
+    facets.type === "subscription" ||
+    facets.type === "project"
+      ? facets.type
+      : null;
+
+  const defaultMeetingForTask =
+    quickCreateType === "task" && selectedItem?.type === "meeting"
+      ? selectedItem.id
+      : null;
+
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center gap-3 border-b border-zinc-800 px-4 py-3">
-        <h1 className="text-sm font-semibold tracking-tight text-zinc-100">
-          Personal Data Spine
-        </h1>
+    <div className="flex h-screen flex-col bg-pds-bg text-pds-text">
+      <header className="flex items-center gap-3 border-b border-pds-border px-4 py-3">
+        <div>
+          <h1 className="text-sm font-semibold tracking-tight text-pds-text">
+            Personal Data Spine
+          </h1>
+          <p className="text-[10px] text-pds-muted">v3 — focus & themes</p>
+        </div>
+        <ThemeToggle compact />
         <nav className="ml-auto flex gap-1">
           {(
             [
+              ["focus", "Focus"],
               ["inbox", "Inbox"],
+              ["subscriptions", "Subscriptions"],
+              ["projects", "Projects"],
               ["meeting", "Meeting"],
               ["settings", "Settings"],
             ] as const
@@ -128,8 +187,8 @@ export default function App() {
               onClick={() => setView(id)}
               className={`rounded px-2.5 py-1 text-xs ${
                 view === id
-                  ? "bg-zinc-100 text-zinc-900"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-pds-accent text-pds-accent-fg"
+                  : "text-pds-muted hover:text-pds-text"
               }`}
             >
               {label}
@@ -150,82 +209,131 @@ export default function App() {
         </p>
       )}
 
+      {view === "focus" && (
+        <FocusView
+          onSelectItem={(id, kind) => {
+            if (kind === "project") {
+              setProjectsFocusId(id);
+              setView("projects");
+            } else {
+              openInboxWithSelection(id);
+            }
+          }}
+          onQuickCreate={(type) => {
+            if (type === "subscription") {
+              setSubscriptionsAddOpen(true);
+              setView("subscriptions");
+            } else if (type === "project") {
+              setProjectsAddOpen(true);
+              setView("projects");
+            } else if (type === "note") {
+              patchFacets({ type: "note" });
+              setView("inbox");
+            } else {
+              openInboxQuickCreate(type);
+            }
+          }}
+        />
+      )}
+
       {view === "inbox" && (
-        <>
-          <div className="border-b border-zinc-800 px-4 py-2">
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search… (/ to focus)"
-              className="w-full rounded border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2 border-b border-zinc-800 px-4 py-2">
-            {TYPE_FILTERS.map((filter) => (
-              <button
-                key={filter.value}
-                type="button"
-                onClick={() => setTypeFilter(filter.value)}
-                className={`rounded px-2 py-0.5 text-[11px] ${
-                  typeFilter === filter.value
-                    ? "bg-zinc-100 text-zinc-900"
-                    : "bg-zinc-900 text-zinc-400"
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2 border-b border-zinc-800 px-4 py-2">
-            {(
-              [
-                ["active", "Active"],
-                ["done", "Done"],
-                ["archived", "Archived"],
-                ["all", "All statuses"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setStatusFilter(value)}
-                className={`rounded px-2 py-0.5 text-[11px] ${
-                  statusFilter === value
-                    ? "bg-emerald-700 text-white"
-                    : "bg-zinc-900 text-zinc-400"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2 border-b border-zinc-800 px-4 py-2">
-            {TAG_FILTERS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setTagFilter(tag)}
-                className={`rounded px-2 py-0.5 text-[11px] ${
-                  tagFilter === tag
-                    ? "bg-violet-600 text-white"
-                    : "bg-zinc-900 text-zinc-400"
-                }`}
-              >
-                {tag === "all" ? "All tags" : tag}
-              </button>
-            ))}
-          </div>
-          <main className="min-h-0 flex-1 overflow-auto">
-            <ItemList
-              items={items}
-              loading={loading}
-              error={error}
-              onChanged={() => void refresh()}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <SearchFacetsBar
+            facets={facets}
+            onChange={patchFacets}
+            searchRef={searchRef}
+          />
+          {quickCreateType && (
+            <QuickCreateForm
+              type={quickCreateType}
+              defaultMeetingId={defaultMeetingForTask}
+              onCreated={(item) => {
+                setSelectedId(item.id);
+                void refresh();
+              }}
               onToast={showToast}
             />
-          </main>
-        </>
+          )}
+          <div className="flex items-center gap-2 border-b border-pds-border px-4 py-2">
+            <button
+              type="button"
+              onClick={() => setShowGraph((v) => !v)}
+              className={`rounded px-2 py-0.5 text-[11px] ${
+                showGraph
+                  ? "bg-violet-600 text-white"
+                  : "bg-pds-chip text-pds-chip-fg"
+              }`}
+            >
+              {showGraph ? "Hide graph" : "Show graph"}
+            </button>
+            {selectedId && (
+              <button
+                type="button"
+                onClick={() => {
+                  patchFacets({ query: "" });
+                  setSelectedId(null);
+                }}
+                className="rounded px-2 py-0.5 text-[11px] bg-pds-chip text-pds-chip-fg"
+              >
+                Clear selection
+              </button>
+            )}
+          </div>
+          {showGraph && (
+            <div className="border-b border-pds-border px-4 py-2">
+              <GraphView
+                focusId={selectedId}
+                onSelectItem={(id) => setSelectedId(id)}
+              />
+            </div>
+          )}
+          <div className="flex min-h-0 flex-1">
+            <main className="min-h-0 flex-1 overflow-auto">
+              <ItemList
+                results={results}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  setEditing(false);
+                  setSelectedId(id);
+                }}
+                loading={loading}
+                error={error}
+                onChanged={() => void refresh()}
+                onToast={showToast}
+                onEdit={handleEditItem}
+              />
+            </main>
+            <RelatedPanel
+              item={selectedItem}
+              editing={editing}
+              onEditingChange={setEditing}
+              onSelectItem={(id) => {
+                setEditing(false);
+                setSelectedId(id);
+              }}
+              onToast={showToast}
+              onChanged={() => void refresh()}
+            />
+          </div>
+        </div>
+      )}
+
+      {view === "subscriptions" && (
+        <SubscriptionsView
+          onToast={showToast}
+          initialShowAdd={subscriptionsAddOpen}
+          onInitialShowAddConsumed={() => setSubscriptionsAddOpen(false)}
+        />
+      )}
+
+      {view === "projects" && (
+        <ProjectsView
+          onToast={showToast}
+          initialShowAdd={projectsAddOpen}
+          onInitialShowAddConsumed={() => setProjectsAddOpen(false)}
+          initialSelectedId={projectsFocusId}
+          onInitialSelectedConsumed={() => setProjectsFocusId(null)}
+        />
       )}
 
       {view === "meeting" && (
@@ -241,7 +349,7 @@ export default function App() {
       {view === "settings" && (
         <main className="min-h-0 flex-1 overflow-auto">
           <SettingsPanel
-            onClose={() => setView("inbox")}
+            onClose={() => setView("focus")}
             onToast={showToast}
           />
         </main>

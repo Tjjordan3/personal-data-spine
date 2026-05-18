@@ -84,7 +84,13 @@ export function MeetingMode({
       setActions([]);
       onSaved();
     } catch (err) {
-      onError(err instanceof Error ? err.message : "Failed to save meeting");
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : JSON.stringify(err);
+      onError(message || "Failed to save meeting");
     } finally {
       setSaving(false);
     }
@@ -118,7 +124,7 @@ export function MeetingMode({
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Paste meeting notes… Use bullets, TODO:, or ACTION: lines."
-        className="min-h-[180px] flex-1 resize-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
+        className="min-h-[180px] flex-1 resize-none rounded-lg border border-pds-border bg-pds-panel px-3 py-2 text-sm text-pds-text placeholder:text-pds-subtle focus:border-pds-muted focus:outline-none"
       />
 
       <div className="flex flex-wrap gap-2">
@@ -134,7 +140,7 @@ export function MeetingMode({
           type="button"
           onClick={() => void handleRefine()}
           disabled={parsing || !notes.trim() || !llmSettings.enabled}
-          className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 disabled:opacity-40"
+          className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-text disabled:opacity-40"
           title={
             llmSettings.enabled
               ? "Refine with LLM"
@@ -154,16 +160,16 @@ export function MeetingMode({
         <button
           type="button"
           onClick={addAction}
-          className="rounded border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400"
+          className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted"
         >
           Add row
         </button>
       </div>
 
       {actions.length > 0 && (
-        <div className="overflow-auto rounded-lg border border-zinc-800">
+        <div className="overflow-auto rounded-lg border border-pds-border">
           <table className="w-full text-left text-xs">
-            <thead className="bg-zinc-900 text-zinc-500">
+            <thead className="bg-pds-panel text-pds-muted">
               <tr>
                 <th className="px-2 py-2 font-medium">Action</th>
                 <th className="w-28 px-2 py-2 font-medium">Owner</th>
@@ -173,14 +179,14 @@ export function MeetingMode({
             </thead>
             <tbody>
               {actions.map((row) => (
-                <tr key={row.id} className="border-t border-zinc-800/80">
+                <tr key={row.id} className="border-t border-pds-border/80">
                   <td className="px-2 py-1.5">
                     <input
                       value={row.text}
                       onChange={(e) =>
                         updateAction(row.id, { text: e.target.value })
                       }
-                      className="w-full rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-zinc-100"
+                      className="w-full rounded border border-pds-border bg-pds-input px-2 py-1 text-pds-text"
                     />
                   </td>
                   <td className="px-2 py-1.5">
@@ -191,7 +197,7 @@ export function MeetingMode({
                           owner: e.target.value || null,
                         })
                       }
-                      className="w-full rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-zinc-100"
+                      className="w-full rounded border border-pds-border bg-pds-input px-2 py-1 text-pds-text"
                     />
                   </td>
                   <td className="px-2 py-1.5">
@@ -203,14 +209,14 @@ export function MeetingMode({
                           due_date: e.target.value || null,
                         })
                       }
-                      className="w-full rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-zinc-100"
+                      className="w-full rounded border border-pds-border bg-pds-input px-2 py-1 text-pds-text"
                     />
                   </td>
                   <td className="px-2 py-1.5 text-center">
                     <button
                       type="button"
                       onClick={() => removeAction(row.id)}
-                      className="text-zinc-500 hover:text-red-400"
+                      className="text-pds-muted hover:text-red-400"
                       aria-label="Remove row"
                     >
                       ×
