@@ -1,13 +1,20 @@
-# Personal Data Spine (v4)
+# Personal Data Spine (v5)
 
 Local-first desktop app built with Tauri 2, React, TypeScript, and SQLite.
 
 - **v1 snapshot:** `../personal-data-spine-v1/` and [V1.md](V1.md)
 - **v2 snapshot (frozen):** `../personal-data-spine-v2/` and [V2.md](V2.md)
 - **v3 snapshot (frozen):** `../personal-data-spine-v3/` and [V3.md](V3.md)
-- **v4 scope (active):** [V4.md](V4.md)
+- **v4 snapshot (frozen):** `../personal-data-spine-v4/` and [V4.md](V4.md)
+- **v5 scope (active):** [V5.md](V5.md)
 
-## v3 features (shipped)
+## v4 features (shipped)
+
+- **Pomodoro timer** — Focus tab work/break blocks, streaks, chimes, start from task
+- **Light mode contrast** — readable muted and body text in light theme
+- All v3 features: Focus stream, themes, subscriptions, projects, links, graph, search facets
+
+## v3 features
 
 - **Focus (Today)** — urgency-sorted stream: tasks due, subscription renewals, active projects
 - **Light / dark theme** — system default on first launch; toggle in header or Settings

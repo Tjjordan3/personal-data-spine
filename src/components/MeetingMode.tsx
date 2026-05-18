@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { emit } from "@tauri-apps/api/event";
 import { saveMeetingWithTasks } from "../lib/db/items";
 import { parseMeetingNotes } from "../lib/meeting/heuristicParser";
 import {
@@ -9,7 +10,7 @@ import {
 import type { ParsedAction } from "../lib/meeting/types";
 
 interface MeetingModeProps {
-  onSaved: () => void;
+  onSaved: (meetingId: string) => void;
   onError: (message: string) => void;
   onSuccess: (message: string) => void;
 }
@@ -19,6 +20,7 @@ export function MeetingMode({
   onError,
   onSuccess,
 }: MeetingModeProps) {
+  const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [actions, setActions] = useState<ParsedAction[]>([]);
   const [parsing, setParsing] = useState(false);
@@ -76,13 +78,16 @@ export function MeetingMode({
           owner: a.owner,
           due_date: a.due_date,
         })),
+        { title: title.trim() || null },
       );
+      await emit("item:saved", {});
       onSuccess(
-        `Saved meeting and ${result.tasks.length} task(s).`,
+        `Saved “${title.trim() || "meeting"}” with ${result.tasks.length} task(s).`,
       );
+      setTitle("");
       setNotes("");
       setActions([]);
-      onSaved();
+      onSaved(result.meeting.id);
     } catch (err) {
       const message =
         err instanceof Error
@@ -120,6 +125,16 @@ export function MeetingMode({
 
   return (
     <div className="flex h-full flex-col gap-3 p-4">
+      <label className="block text-[11px] text-pds-muted">
+        Title (optional)
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Product sync — May 18"
+          className="mt-1 w-full rounded-lg border border-pds-border bg-pds-panel px-3 py-2 text-sm text-pds-text placeholder:text-pds-subtle focus:border-pds-muted focus:outline-none"
+        />
+      </label>
       <textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
@@ -132,7 +147,7 @@ export function MeetingMode({
           type="button"
           onClick={() => void handleParse()}
           disabled={parsing || !notes.trim()}
-          className="rounded bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 disabled:opacity-40"
+          className="rounded bg-pds-accent px-3 py-1.5 text-xs font-medium text-pds-accent-fg disabled:opacity-40"
         >
           {parsing ? "Parsing…" : "Parse preview"}
         </button>

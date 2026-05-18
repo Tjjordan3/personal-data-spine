@@ -41,6 +41,9 @@ export function ItemEditForm({
   onNavigateToFocus,
 }: ItemEditFormProps) {
   const [content, setContent] = useState(item.content);
+  const [meetingTitle, setMeetingTitle] = useState(
+    (item.metadata.title as string | undefined) ?? "",
+  );
   const [tagsInput, setTagsInput] = useState(tagsToString(item.tags));
   const [owner, setOwner] = useState(
     (item.metadata.owner as string | undefined) ?? "",
@@ -90,6 +93,7 @@ export function ItemEditForm({
 
   useEffect(() => {
     setContent(item.content);
+    setMeetingTitle((item.metadata.title as string | undefined) ?? "");
     setTagsInput(tagsToString(item.tags));
     setOwner((item.metadata.owner as string | undefined) ?? "");
     setDueDate((item.metadata.due_date as string | undefined) ?? "");
@@ -155,6 +159,9 @@ export function ItemEditForm({
         metadata.target_date = projectTargetDate.trim() || null;
         metadata.started_at = projectStartedAt.trim() || null;
       }
+      if (item.type === "meeting") {
+        metadata.title = meetingTitle.trim() || null;
+      }
 
       const updated = await updateItem(item.id, {
         content: trimmed,
@@ -198,9 +205,27 @@ export function ItemEditForm({
         />
       )}
 
+      {item.type === "meeting" && (
+        <label className="block text-[11px] text-pds-muted">
+          Title
+          <input
+            type="text"
+            value={meetingTitle}
+            onChange={(e) => setMeetingTitle(e.target.value)}
+            disabled={saving}
+            placeholder="Meeting title…"
+            className="mt-1 w-full rounded border border-pds-border bg-pds-input px-2 py-1.5 text-sm text-pds-text focus:border-pds-muted focus:outline-none"
+          />
+        </label>
+      )}
+
       <label className="block text-[11px] text-pds-muted">
-        {item.type === "subscription" || item.type === "project"
-          ? "Title"
+        {item.type === "subscription" ||
+        item.type === "project" ||
+        item.type === "meeting"
+          ? item.type === "meeting"
+            ? "Notes"
+            : "Title"
           : "Content"}
         {item.type === "subscription" || item.type === "project" ? (
           <input

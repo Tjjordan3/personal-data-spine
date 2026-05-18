@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { GraphView } from "./components/GraphView";
 import { ItemList } from "./components/ItemList";
-import { MeetingMode } from "./components/MeetingMode";
+import { MeetingsView } from "./components/MeetingsView";
 import { FocusView } from "./components/FocusView";
 import { ProjectsView } from "./components/ProjectsView";
 import { SubscriptionsView } from "./components/SubscriptionsView";
@@ -170,7 +170,7 @@ export default function App() {
           <h1 className="text-sm font-semibold tracking-tight text-pds-text">
             Personal Data Spine
           </h1>
-          <p className="text-[10px] text-pds-muted">v4 — focus & pomodoro</p>
+          <p className="text-[10px] text-pds-muted">v5 — meetings hub</p>
         </div>
         <ThemeToggle compact />
         <nav className="ml-auto flex gap-1">
@@ -342,12 +342,8 @@ export default function App() {
       )}
 
       {view === "meeting" && (
-        <main className="min-h-0 flex-1 overflow-auto">
-          <MeetingMode
-            onSaved={() => void refresh()}
-            onError={(msg) => showToast(msg, "error")}
-            onSuccess={(msg) => showToast(msg, "success")}
-          />
+        <main className="flex min-h-0 flex-1 overflow-hidden">
+          <MeetingsView onToast={showToast} />
         </main>
       )}
 

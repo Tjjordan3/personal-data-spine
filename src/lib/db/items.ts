@@ -239,6 +239,7 @@ export async function saveMeetingWithTasks(
     owner: string | null;
     due_date: string | null;
   }>,
+  options?: { title?: string | null },
 ): Promise<{ meeting: Item; tasks: Item[] }> {
   const normalizedTasks = tasks
     .map((t) => ({
@@ -253,6 +254,7 @@ export async function saveMeetingWithTasks(
 
   const meetingId = crypto.randomUUID();
   const parsed_at = new Date().toISOString();
+  const title = options?.title?.trim() || null;
 
   const meeting = await insertItem({
     id: meetingId,
@@ -260,7 +262,11 @@ export async function saveMeetingWithTasks(
     content: meetingContent,
     tags: ["#meeting"],
     source: "meeting-mode",
-    metadata: { parsed_at, task_count: normalizedTasks.length },
+    metadata: {
+      title,
+      parsed_at,
+      task_count: normalizedTasks.length,
+    },
   });
 
   const savedTasks: Item[] = [];

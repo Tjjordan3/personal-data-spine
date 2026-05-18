@@ -39,6 +39,7 @@ export interface TaskMetadata {
 }
 
 export interface MeetingMetadata {
+  title?: string | null;
   parsed_at?: string;
   task_count?: number;
 }

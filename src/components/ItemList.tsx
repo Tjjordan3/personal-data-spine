@@ -14,6 +14,7 @@ import {
   type ProjectTaskRollup,
 } from "../lib/db/projects";
 import { getCategoryById } from "../lib/subscriptions/catalog";
+import { meetingBodyPreview, meetingTitle } from "../lib/meeting/display";
 import type { Item, ItemType, ProjectMetadata } from "../lib/db/types";
 
 interface ItemListProps {
@@ -222,8 +223,20 @@ export function ItemList({
                     : "text-pds-text"
               }`}
             >
-              {preview(item.content)}
+              {item.type === "meeting" &&
+              typeof item.metadata.title === "string" &&
+              item.metadata.title.trim()
+                ? meetingTitle(item)
+                : preview(item.content)}
             </p>
+            {item.type === "meeting" &&
+              typeof item.metadata.title === "string" &&
+              item.metadata.title.trim() &&
+              meetingBodyPreview(item) && (
+                <p className="mt-0.5 text-xs text-pds-muted">
+                  {meetingBodyPreview(item)}
+                </p>
+              )}
             {(item.type === "subscription" || item.type === "project") && (
               <MetadataNotesLine metadata={item.metadata} />
             )}
