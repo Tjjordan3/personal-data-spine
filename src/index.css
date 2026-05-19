@@ -16,6 +16,11 @@
   --pds-chip: #f4f4f5;
   --pds-chip-fg: #3f3f46;
   --pds-hover: #27272a;
+  --pds-motion-view: 280ms;
+  --pds-motion-modal-backdrop: 200ms;
+  --pds-motion-modal-panel: 280ms;
+  --pds-motion-toast: 300ms;
+  --pds-motion-timer: 250ms;
 }
 
 .dark {
@@ -61,117 +66,156 @@ body {
   min-height: 100vh;
 }
 
-/* Motion utilities — disabled when user prefers reduced motion */
-@layer utilities {
-  @keyframes pds-fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+/* Motion keyframes — defined outside @layer so Tailwind v4 always emits them */
+@keyframes pds-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-
-  @keyframes pds-fade-out {
-    from {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(-4px);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  @keyframes pds-modal-backdrop-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+@keyframes pds-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-
-  @keyframes pds-modal-panel-in {
-    from {
-      opacity: 0;
-      transform: scale(0.98);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  @keyframes pds-toast-in {
-    from {
-      opacity: 0;
-      transform: translateY(-6px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+@keyframes pds-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
   }
-
-  @keyframes pds-toast-out {
-    from {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(-6px);
-    }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
   }
+}
 
-  .pds-fade-in {
-    animation: pds-fade-in 180ms ease-out both;
+@keyframes pds-modal-backdrop-in {
+  from {
+    opacity: 0;
   }
-
-  .pds-fade-out {
-    animation: pds-fade-out 180ms ease-in both;
+  to {
+    opacity: 1;
   }
+}
 
-  .pds-view-enter {
-    animation: pds-fade-in 180ms ease-out both;
+@keyframes pds-modal-backdrop-out {
+  from {
+    opacity: 1;
   }
-
-  .pds-modal-backdrop {
-    animation: pds-modal-backdrop-in 150ms ease-out both;
+  to {
+    opacity: 0;
   }
+}
 
-  .pds-modal-panel {
-    animation: pds-modal-panel-in 180ms ease-out both;
+@keyframes pds-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(6px);
   }
-
-  .pds-toast-enter {
-    animation: pds-toast-in 200ms ease-out both;
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
+}
 
-  .pds-toast-exit {
-    animation: pds-toast-out 200ms ease-in both;
+@keyframes pds-modal-panel-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+}
 
+@keyframes pds-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pds-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+/* Motion utility classes */
+.pds-view-enter {
+  animation: pds-view-enter var(--pds-motion-view) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pds-fade-in {
+  animation: pds-fade-in var(--pds-motion-view) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pds-fade-out {
+  animation: pds-fade-out 240ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.pds-modal-backdrop {
+  animation: pds-modal-backdrop-in var(--pds-motion-modal-backdrop) ease-out both;
+}
+
+.pds-modal-backdrop-exit {
+  animation: pds-modal-backdrop-out var(--pds-motion-modal-backdrop) ease-in both;
+}
+
+.pds-modal-panel {
+  animation: pds-modal-panel-in var(--pds-motion-modal-panel)
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pds-modal-panel-exit {
+  animation: pds-modal-panel-out 240ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.pds-toast-enter {
+  animation: pds-toast-in var(--pds-motion-toast) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pds-toast-exit {
+  animation: pds-toast-out var(--pds-motion-toast) cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.pds-timer-mode {
+  animation: pds-view-enter var(--pds-motion-timer) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pds-view-enter,
+  .pds-fade-in,
+  .pds-fade-out,
+  .pds-modal-backdrop,
+  .pds-modal-backdrop-exit,
+  .pds-modal-panel,
+  .pds-modal-panel-exit,
+  .pds-toast-enter,
+  .pds-toast-exit,
   .pds-timer-mode {
-    transition:
-      opacity 200ms ease,
-      max-height 200ms ease;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .pds-fade-in,
-    .pds-fade-out,
-    .pds-view-enter,
-    .pds-modal-backdrop,
-    .pds-modal-panel,
-    .pds-toast-enter,
-    .pds-toast-exit,
-    .pds-timer-mode {
-      animation: none !important;
-      transition: none !important;
-    }
+    animation: none !important;
+    transition: none !important;
   }
 }

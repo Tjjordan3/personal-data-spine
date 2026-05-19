@@ -233,7 +233,7 @@ export function MeetingsView({
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto border-r border-pds-border">
         <div
           key={`${selectedId ?? "compose"}-${editing ? "edit" : "view"}`}
-          className="pds-fade-in flex min-h-0 min-w-0 flex-1 flex-col"
+          className="pds-view-enter flex min-h-0 min-w-0 flex-1 flex-col"
         >
         {selectedId == null ? (
           <MeetingMode

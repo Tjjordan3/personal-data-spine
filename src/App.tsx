@@ -113,7 +113,7 @@ export default function App() {
           setToast(null);
           setToastExiting(false);
           toastExitRef.current = null;
-        }, 200);
+        }, 300);
         toastHideRef.current = null;
       }, 3800);
     },

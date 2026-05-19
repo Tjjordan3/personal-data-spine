@@ -29,7 +29,7 @@ export function FocusTimerBar() {
       <div className="sticky bottom-0 z-10 border-t border-pds-border bg-pds-panel/95 px-4 py-3 backdrop-blur-sm">
         <div
           key={isBreak ? "break" : "focus"}
-          className={`pds-timer-mode pds-fade-in ${isBreak ? "opacity-95" : "opacity-100"}`}
+          className="pds-timer-mode"
         >
         {isBreak ? (
           <div className="flex flex-wrap items-center gap-3">

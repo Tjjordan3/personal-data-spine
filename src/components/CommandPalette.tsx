@@ -11,7 +11,10 @@ import { searchWithFacets } from "../lib/db/search";
 import { NOTE_TEMPLATES } from "../lib/capture/templates";
 import { emit } from "@tauri-apps/api/event";
 import type { Item, ItemType } from "../lib/db/types";
+import { useAnimatedPresence } from "../lib/useAnimatedPresence";
 import { useFocusTimer } from "./FocusTimerContext";
+
+const MODAL_EXIT_MS = 240;
 
 export type AppView =
   | "focus"
@@ -79,22 +82,23 @@ export function CommandPalette({
   actions,
 }: CommandPaletteProps) {
   const timer = useFocusTimer();
+  const { mounted, exiting } = useAnimatedPresence(open, MODAL_EXIT_MS);
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!mounted) return;
     setQuery("");
     setHighlight(0);
     const id = window.setTimeout(() => inputRef.current?.focus(), 0);
     void listItems({ status: "active", limit: 120 }).then(setItems);
     return () => window.clearTimeout(id);
-  }, [open]);
+  }, [mounted]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!mounted) return;
     const q = query.trim();
     if (!q) {
       void listItems({ status: "active", limit: 120 }).then(setItems);
@@ -106,7 +110,7 @@ export function CommandPalette({
       );
     }, 120);
     return () => window.clearTimeout(handle);
-  }, [open, query]);
+  }, [mounted, query]);
 
   const staticCommands = useMemo<PaletteCommand[]>(
     () => [
@@ -251,7 +255,7 @@ export function CommandPalette({
   }, [filtered, highlight, runCommand]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!mounted || exiting) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -275,20 +279,25 @@ export function CommandPalette({
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, filtered.length, highlight, onClose, runHighlighted]);
+  }, [mounted, exiting, filtered.length, highlight, onClose, runHighlighted]);
 
-  if (!open) return null;
+  if (!mounted) return null;
+
+  const backdropClass = exiting
+    ? "pds-modal-backdrop-exit"
+    : "pds-modal-backdrop";
+  const panelClass = exiting ? "pds-modal-panel-exit" : "pds-modal-panel";
 
   return (
     <div
-      className="pds-modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh]"
+      className={`${backdropClass} fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh]`}
       role="presentation"
       onMouseDown={(e: MouseEvent) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="pds-modal-panel w-full max-w-lg overflow-hidden rounded-lg border border-pds-border bg-pds-panel shadow-xl"
+        className={`${panelClass} w-full max-w-lg overflow-hidden rounded-lg border border-pds-border bg-pds-panel shadow-xl`}
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
