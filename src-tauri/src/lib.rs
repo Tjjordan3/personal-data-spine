@@ -133,6 +133,12 @@ pub fn run() {
             import_database
         ])
         .setup(|app| {
+            if let Some(main_win) = app.get_webview_window("main") {
+                let _ = main_win.show();
+                let _ = main_win.unminimize();
+                let _ = main_win.set_focus();
+            }
+
             let handle = app.handle().clone();
             let default =
                 Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Space);

@@ -42,10 +42,20 @@
 
 ## Development
 
+From the **project root** (this folder):
+
 ```bash
 npm install
 npm run tauri dev
 ```
+
+`npm run dev` starts Vite only (browser at http://127.0.0.1:1420) and does **not** open the DonePath desktop window. Always use `npm run tauri dev` for the GUI.
+
+### Dev window blank or `tauri dev` exits immediately
+
+- **Port 1420 in use** — another Vite or old dev session is running. Stop it or free the port, then run `npm run tauri dev` again.
+- **WebView cannot reach Vite** — dev uses `http://127.0.0.1:1420` (IPv4). Do not point `devUrl` at `localhost` alone on Windows if Vite is IPv6-only.
+- **WebView2** — install the [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) if the shell never appears.
 
 > Schema is applied at startup via `CREATE TABLE IF NOT EXISTS` (no Rust migration checksums).
 
