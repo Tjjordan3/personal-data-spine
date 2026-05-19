@@ -129,7 +129,7 @@ export function FocusTaskActions({
           type="button"
           disabled={busy}
           onClick={() => void handleStart()}
-          className={`${btn} border-violet-700/50 text-violet-700 dark:text-violet-300`}
+          className={`${btn} border-emerald-700/50 text-emerald-700 dark:text-emerald-300`}
         >
           Start
         </button>

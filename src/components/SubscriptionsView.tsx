@@ -125,7 +125,7 @@ export function SubscriptionsView({
           className={`rounded px-3 py-1.5 text-xs font-medium ${
             showAdd
               ? "border border-pds-border text-pds-muted"
-              : "bg-violet-600 text-white"
+              : "pds-chip-active"
           }`}
         >
           {showAdd ? "Close picker" : "Add subscription"}

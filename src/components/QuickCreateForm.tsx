@@ -262,7 +262,7 @@ export function QuickCreateForm({
         <button
           type="submit"
           disabled={saving || !content.trim()}
-          className="shrink-0 rounded bg-violet-600 px-4 py-2 text-xs font-medium text-white disabled:opacity-40"
+          className="pds-btn-primary shrink-0 px-4 py-2 text-xs disabled:opacity-40"
         >
           {saving ? "Saving…" : "Add"}
         </button>

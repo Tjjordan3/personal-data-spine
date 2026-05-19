@@ -54,7 +54,7 @@ export function FocusTimerBar() {
               <button
                 type="button"
                 onClick={() => timer.endBreak()}
-                className="rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white"
+                className="pds-btn-primary px-3 py-1.5 text-xs"
               >
                 End break
               </button>
@@ -75,7 +75,7 @@ export function FocusTimerBar() {
                   <p className="text-sm text-pds-muted">Pick a task to start</p>
                 )}
                 {isActive && (
-                  <p className="font-mono text-2xl font-semibold tabular-nums text-violet-600 dark:text-violet-300">
+                  <p className="pds-timer-accent">
                     {timer.displayLabel}
                   </p>
                 )}
@@ -92,7 +92,7 @@ export function FocusTimerBar() {
                       className={`rounded px-2 py-1 text-[11px] ${
                         timer.plannedMinutes === FOCUS_PRESET_MINUTES &&
                         timer.kind === "focus"
-                          ? "bg-violet-600 text-white"
+                          ? "pds-chip-active"
                           : "bg-pds-chip text-pds-chip-fg"
                       }`}
                     >
@@ -107,7 +107,7 @@ export function FocusTimerBar() {
                       className={`rounded px-2 py-1 text-[11px] ${
                         timer.plannedMinutes === BREAK_PRESET_MINUTES &&
                         timer.kind === "break"
-                          ? "bg-emerald-600 text-white"
+                          ? "pds-chip-active"
                           : "bg-pds-chip text-pds-chip-fg"
                       }`}
                     >
@@ -128,7 +128,7 @@ export function FocusTimerBar() {
                       <button
                         type="button"
                         onClick={() => void timer.resumeLastTask()}
-                        className="rounded border border-violet-800/50 px-2.5 py-1 text-[11px] text-violet-700 dark:text-violet-300"
+                        className={`rounded border px-2.5 py-1 text-[11px] pds-focus-outline`}
                       >
                         Resume last
                       </button>
@@ -140,7 +140,7 @@ export function FocusTimerBar() {
                         if (timer.kind === "break") timer.startBreak();
                         else void timer.startWithCurrentTask();
                       }}
-                      className="rounded bg-violet-600 px-2.5 py-1 text-[11px] font-medium text-white disabled:opacity-40"
+                      className="pds-btn-primary px-2.5 py-1 text-[11px] disabled:opacity-40"
                     >
                       {timer.kind === "break" ? "Start break" : "Start"}
                     </button>
@@ -228,7 +228,7 @@ export function FocusTimerBar() {
                 <button
                   type="button"
                   onClick={() => void timer.startWithCurrentTask()}
-                  className="w-full rounded bg-violet-600 py-2 text-xs font-medium text-white"
+                  className="pds-btn-primary w-full py-2 text-xs"
                 >
                   Start {timer.plannedMinutes} min on selected task
                 </button>

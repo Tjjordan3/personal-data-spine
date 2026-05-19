@@ -56,27 +56,27 @@ export function SearchFacetsBar({
         value={facets.query}
         onChange={(e) => onChange({ query: e.target.value })}
         placeholder="Search… (/ to focus)"
-        className="w-full rounded border border-pds-border bg-pds-panel px-3 py-2 text-sm text-pds-text placeholder:text-pds-subtle focus:border-pds-muted focus:outline-none"
+        className="w-full rounded border border-pds-border bg-pds-panel px-3 py-2 text-pds-base text-pds-text placeholder:text-pds-subtle focus:border-pds-muted focus:outline-none"
       />
       <div className="flex flex-wrap items-center gap-2">
-        <label className="text-[11px] text-pds-muted">From</label>
+        <label className="text-pds-sm text-pds-muted">From</label>
         <input
           type="date"
           value={facets.dateFrom}
           onChange={(e) => onChange({ dateFrom: e.target.value })}
-          className="rounded border border-pds-border bg-pds-input px-2 py-1 text-[11px] text-pds-text"
+          className="rounded border border-pds-border bg-pds-input px-2 py-1 text-pds-sm text-pds-text"
         />
-        <label className="text-[11px] text-pds-muted">To</label>
+        <label className="text-pds-sm text-pds-muted">To</label>
         <input
           type="date"
           value={facets.dateTo}
           onChange={(e) => onChange({ dateTo: e.target.value })}
-          className="rounded border border-pds-border bg-pds-input px-2 py-1 text-[11px] text-pds-text"
+          className="rounded border border-pds-border bg-pds-input px-2 py-1 text-pds-sm text-pds-text"
         />
         <button
           type="button"
           onClick={() => onChange({ dueSoon: !facets.dueSoon })}
-          className={`rounded px-2 py-0.5 text-[11px] ${
+          className={`rounded px-2 py-0.5 text-pds-sm ${
             facets.dueSoon
               ? "bg-amber-600 text-white"
               : "bg-pds-panel text-pds-muted"
@@ -102,7 +102,7 @@ export function SearchFacetsBar({
             active={facets.status === opt.value}
             onClick={() => onChange({ status: opt.value })}
             label={opt.label}
-            activeClass="bg-emerald-700 text-white"
+            activeClass="pds-chip-active"
           />
         ))}
       </FacetRow>
@@ -113,7 +113,7 @@ export function SearchFacetsBar({
             active={facets.tag === tag}
             onClick={() => onChange({ tag })}
             label={tag === "all" ? "All tags" : tag}
-            activeClass="bg-violet-600 text-white"
+            activeClass="pds-chip-active"
           />
         ))}
       </FacetRow>
@@ -140,7 +140,7 @@ function FacetChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded px-2 py-0.5 text-[11px] ${
+      className={`rounded px-2 py-0.5 text-pds-sm ${
         active ? activeClass : "bg-pds-panel text-pds-muted"
       }`}
     >

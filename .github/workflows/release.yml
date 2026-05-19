@@ -1,0 +1,53 @@
+# Build Windows installers and attach them to a GitHub Release when a v* tag is pushed.
+# See RELEASING.md — installers are not committed to the repository.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: npm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and publish Tauri bundles
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: DonePath ${{ github.ref_name }}
+          releaseBody: |
+            Windows x64 installer for DonePath.
+
+            **Privacy:** The installer does not include any user data. Each install uses a fresh local SQLite database on that machine. See [RELEASING.md](https://github.com/${{ github.repository }}/blob/main/RELEASING.md).
+
+            ### Install
+            Download `DonePath_*_x64-setup.exe` and run it. If SmartScreen appears, choose **More info → Run anyway** (unsigned build).
+
+            ### Files
+            - **NSIS setup (.exe)** — recommended for most users
+            - **MSI** — alternative installer format
+          releaseDraft: false
+          prerelease: false
+          args: --target x86_64-pc-windows-msvc

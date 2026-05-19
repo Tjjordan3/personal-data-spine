@@ -15,9 +15,9 @@ export function EmptyState({
     <div
       className={`flex flex-col items-center justify-center gap-3 px-6 py-12 text-center ${className}`}
     >
-      <p className="text-sm font-medium text-pds-text">{title}</p>
+      <p className="text-pds-base font-medium text-pds-text">{title}</p>
       {description && (
-        <p className="max-w-sm text-xs leading-relaxed text-pds-muted">
+        <p className="max-w-sm text-pds-sm leading-relaxed text-pds-muted">
           {description}
         </p>
       )}

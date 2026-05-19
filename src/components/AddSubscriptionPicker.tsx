@@ -283,7 +283,7 @@ export function AddSubscriptionPicker({
                 <button
                   type="button"
                   onClick={() => selectCategory(cat)}
-                  className="flex w-full items-center justify-between rounded-lg border border-pds-border bg-pds-panel px-3 py-2.5 text-left text-sm text-pds-text transition hover:border-violet-500/50 hover:bg-violet-950/20"
+                  className="flex w-full items-center justify-between rounded-lg border border-pds-border bg-pds-panel px-3 py-2.5 text-left text-sm text-pds-text transition hover:border-emerald-500/50 hover:bg-emerald-950/20"
                 >
                   <span>{cat.label}</span>
                   <span className="text-[10px] text-pds-subtle">
@@ -296,7 +296,7 @@ export function AddSubscriptionPicker({
               <button
                 type="button"
                 onClick={openCustom}
-                className="flex w-full items-center justify-between rounded-lg border border-dashed border-pds-border bg-pds-panel/80 px-3 py-2.5 text-left text-sm text-pds-text transition hover:border-violet-500/50 hover:bg-violet-950/20"
+                className="flex w-full items-center justify-between rounded-lg border border-dashed border-pds-border bg-pds-panel/80 px-3 py-2.5 text-left text-sm text-pds-text transition hover:border-emerald-500/50 hover:bg-emerald-950/20"
               >
                 <span>Custom subscription</span>
                 <span className="text-[10px] text-pds-muted">Type your own</span>
@@ -320,7 +320,7 @@ export function AddSubscriptionPicker({
                 <button
                   type="button"
                   onClick={() => selectService(name)}
-                  className="w-full px-3 py-2 text-left text-sm text-pds-text hover:bg-violet-950/25"
+                  className="w-full px-3 py-2 text-left text-sm text-pds-text hover:bg-emerald-950/25"
                 >
                   {name}
                 </button>
@@ -350,7 +350,7 @@ export function AddSubscriptionPicker({
             type="button"
             disabled={saving || !customName.trim()}
             onClick={confirmCustom}
-            className="shrink-0 rounded bg-violet-600 px-4 py-2 text-xs font-medium text-white disabled:opacity-40"
+            className="pds-btn-primary shrink-0 px-4 py-2 text-xs disabled:opacity-40"
           >
             Continue
           </button>
@@ -445,7 +445,7 @@ export function AddSubscriptionPicker({
             <button
               type="submit"
               disabled={saving}
-              className="rounded bg-violet-600 px-4 py-2 text-xs font-medium text-white disabled:opacity-40"
+              className="pds-btn-primary px-4 py-2 text-xs disabled:opacity-40"
             >
               {saving ? "Adding…" : "Add subscription"}
             </button>

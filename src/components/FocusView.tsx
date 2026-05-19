@@ -131,14 +131,14 @@ function FocusViewBody({
       <div className="border-b border-pds-border px-4 py-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h2 className="text-sm font-semibold text-pds-text">Today</h2>
-            <p className="mt-1 text-xs text-pds-muted">{summaryLine}</p>
+            <h2 className="text-pds-base font-semibold text-pds-text">Today</h2>
+            <p className="mt-1 text-pds-sm text-pds-muted">{summaryLine}</p>
           </div>
           {hasNextTask && (
             <button
               type="button"
               onClick={() => void handleStartNext()}
-              className="shrink-0 rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500"
+              className="pds-btn-primary shrink-0 px-3 py-1.5 text-pds-sm"
             >
               Start focus
             </button>
@@ -148,10 +148,10 @@ function FocusViewBody({
 
       <div className="min-h-0 flex-1 overflow-auto">
         {loading && (
-          <p className="px-4 py-8 text-center text-sm text-pds-muted">Loading…</p>
+          <p className="px-4 py-8 text-center text-pds-base text-pds-muted">Loading…</p>
         )}
         {error && (
-          <p className="mx-4 mt-4 rounded bg-red-950/40 px-3 py-2 text-xs text-red-400">
+          <p className="mx-4 mt-4 rounded bg-red-950/40 px-3 py-2 text-pds-sm text-red-400">
             {error}
           </p>
         )}
@@ -165,28 +165,28 @@ function FocusViewBody({
               <button
                 type="button"
                 onClick={() => onQuickCreate("task")}
-                className="rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white"
+                className="pds-btn-primary px-3 py-1.5 text-pds-sm"
               >
                 New task
               </button>
               <button
                 type="button"
                 onClick={() => onQuickCreate("subscription")}
-                className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-text"
+                className="rounded border border-pds-border px-3 py-1.5 text-pds-sm text-pds-text"
               >
                 New subscription
               </button>
               <button
                 type="button"
                 onClick={() => onQuickCreate("project")}
-                className="rounded border border-emerald-800/60 px-3 py-1.5 text-xs text-emerald-300"
+                className="rounded border border-emerald-800/60 px-3 py-1.5 text-pds-sm text-emerald-300"
               >
                 New project
               </button>
               <button
                 type="button"
                 onClick={() => void openCapture()}
-                className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-text"
+                className="rounded border border-pds-border px-3 py-1.5 text-pds-sm text-pds-text"
               >
                 Quick capture
               </button>
@@ -206,28 +206,28 @@ function FocusViewBody({
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${urgencyClass(entry.urgency)}`}
+                        className={`rounded px-1.5 py-0.5 text-pds-caption font-medium uppercase tracking-wide ${urgencyClass(entry.urgency)}`}
                       >
                         {urgencyLabel(entry.urgency)}
                       </span>
-                      <span className="rounded bg-pds-chip px-1.5 py-0.5 text-[10px] text-pds-chip-fg">
+                      <span className="rounded bg-pds-chip px-1.5 py-0.5 text-pds-caption text-pds-chip-fg">
                         {kindLabel(entry.kind)}
                       </span>
                     </div>
-                    <span className="text-sm font-medium text-pds-text">
+                    <span className="text-pds-base font-medium text-pds-text">
                       {preview(entry.item.content)}
                     </span>
                     {(entry.kind === "subscription" ||
                       entry.kind === "project") &&
                       (entry.item.metadata.notes as string | undefined)?.trim() && (
-                        <span className="text-[11px] leading-snug text-pds-subtle">
+                        <span className="text-pds-sm leading-snug text-pds-subtle">
                           {preview(
                             (entry.item.metadata.notes as string).trim(),
                             120,
                           )}
                         </span>
                       )}
-                    <span className="text-[11px] text-pds-muted">
+                    <span className="text-pds-sm text-pds-muted">
                       {entry.detail}
                     </span>
                   </button>

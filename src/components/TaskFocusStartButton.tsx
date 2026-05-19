@@ -10,7 +10,7 @@ interface TaskFocusStartButtonProps {
 export function TaskFocusStartButton({
   task,
   onNavigateToFocus,
-  className = "w-full rounded bg-violet-600 py-2 text-xs font-medium text-white hover:bg-violet-500",
+  className = "pds-btn-primary w-full py-2 text-xs",
 }: TaskFocusStartButtonProps) {
   const timer = useFocusTimer();
   const isSameTaskActive =

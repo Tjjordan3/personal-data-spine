@@ -124,7 +124,7 @@ export function LinkPickerModal({
                 onClick={() => void onPick(item.id)}
                 className={`w-full rounded px-3 py-2 text-left text-[11px] ${
                   index === highlight
-                    ? "bg-violet-950/40 text-pds-text"
+                    ? "bg-emerald-950/40 text-pds-text"
                     : "text-pds-text hover:bg-pds-chip"
                 }`}
               >

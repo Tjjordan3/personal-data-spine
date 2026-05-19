@@ -22,6 +22,7 @@ import {
   type AppView,
 } from "./components/CommandPalette";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { NavViewIcon } from "./components/icons/NavIcon";
 import type { ItemType } from "./lib/db/types";
 import { getItemById, markItemsDone } from "./lib/db/items";
 import { searchWithFacets, type SearchResult } from "./lib/db/search";
@@ -53,7 +54,7 @@ const SettingsPanel = lazy(() =>
 function DeferredRouteFallback() {
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center bg-pds-bg px-4">
-      <p className="text-xs text-pds-muted">Loading…</p>
+      <p className="text-pds-sm text-pds-muted">Loading…</p>
     </div>
   );
 }
@@ -263,10 +264,10 @@ export default function App() {
     <div className="flex h-screen flex-col bg-pds-bg text-pds-text">
       <header className="flex items-center gap-3 border-b border-pds-border px-4 py-3">
         <div>
-          <h1 className="text-sm font-semibold tracking-tight text-pds-text">
+          <h1 className="pds-wordmark text-pds-base text-pds-text">
             DonePath
           </h1>
-          <p className="text-[10px] text-pds-muted">
+          <p className="text-pds-caption text-pds-muted">
             Local-first tasks, meetings, and focus on your computer
           </p>
         </div>
@@ -286,12 +287,13 @@ export default function App() {
               key={id}
               type="button"
               onClick={() => setView(id)}
-              className={`rounded px-2.5 py-1 text-xs ${
+              className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-pds-sm ${
                 view === id
                   ? "bg-pds-accent text-pds-accent-fg"
                   : "text-pds-muted hover:text-pds-text"
               }`}
             >
+              <NavViewIcon view={id} />
               {label}
             </button>
           ))}
@@ -301,7 +303,7 @@ export default function App() {
       {toast && (
         <p
           role="status"
-          className={`mx-4 mt-2 rounded px-3 py-2 text-xs ${
+          className={`mx-4 mt-2 rounded px-3 py-2 text-pds-sm ${
             toastExiting ? "pds-toast-exit" : "pds-toast-enter"
           } ${
             toast.kind === "success"
@@ -369,9 +371,9 @@ export default function App() {
             <button
               type="button"
               onClick={() => setShowGraph((v) => !v)}
-              className={`rounded px-2 py-0.5 text-[11px] ${
+              className={`rounded px-2 py-0.5 text-pds-sm ${
                 showGraph
-                  ? "bg-violet-600 text-white"
+                  ? "pds-chip-active"
                   : "bg-pds-chip text-pds-chip-fg"
               }`}
             >
@@ -381,9 +383,9 @@ export default function App() {
               type="button"
               disabled={!selectedId}
               onClick={() => setLinkedToSelection((v) => !v)}
-              className={`rounded px-2 py-0.5 text-[11px] disabled:opacity-40 ${
+              className={`rounded px-2 py-0.5 text-pds-sm disabled:opacity-40 ${
                 linkedToSelection
-                  ? "bg-violet-600 text-white"
+                  ? "pds-chip-active"
                   : "bg-pds-chip text-pds-chip-fg"
               }`}
             >
@@ -393,7 +395,7 @@ export default function App() {
               type="button"
               disabled={batchBusy || results.length === 0}
               onClick={() => void handleMarkVisibleDone()}
-              className="rounded px-2 py-0.5 text-[11px] bg-pds-chip text-pds-chip-fg disabled:opacity-40"
+              className="rounded px-2 py-0.5 text-pds-sm bg-pds-chip text-pds-chip-fg disabled:opacity-40"
             >
               Mark visible done
             </button>
@@ -404,17 +406,17 @@ export default function App() {
                   setLinkedToSelection(false);
                   setSelectedId(null);
                 }}
-                className="rounded px-2 py-0.5 text-[11px] bg-pds-chip text-pds-chip-fg"
+                className="rounded px-2 py-0.5 text-pds-sm bg-pds-chip text-pds-chip-fg"
               >
                 Clear selection
               </button>
             )}
           </div>
           {showGraph && (
-            <div className="border-b border-pds-border px-4 py-2">
+            <div className="border-b border-pds-border px-4 py-3">
               <Suspense
                 fallback={
-                  <p className="py-6 text-center text-xs text-pds-muted">
+                  <p className="py-6 text-center text-pds-sm text-pds-muted">
                     Loading graph…
                   </p>
                 }

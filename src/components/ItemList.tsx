@@ -147,12 +147,12 @@ export function ItemList({
   }
 
   if (loading) {
-    return <p className="px-4 py-8 text-sm text-pds-muted">Loading items…</p>;
+    return <p className="px-4 py-8 text-pds-base text-pds-muted">Loading items…</p>;
   }
 
   if (error) {
     return (
-      <p className="mx-4 my-4 rounded border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+      <p className="mx-4 my-4 rounded border border-red-900/50 bg-red-950/40 px-3 py-2 text-pds-base text-red-300">
         {error}
       </p>
     );
@@ -183,14 +183,14 @@ export function ItemList({
         return (
           <li
             key={item.id}
-            className={`rounded-lg border px-3 py-2.5 transition ${
+            className={`pds-inbox-item ${
               selected
-                ? "border-violet-600 bg-violet-950/30"
+                ? "pds-list-item-selected"
                 : isArchived
                   ? "border-pds-border/60 bg-pds-input/80 opacity-70"
                   : isDone
                     ? "border-pds-border bg-pds-panel/40"
-                    : "border-pds-border bg-pds-panel/60 hover:border-pds-border"
+                    : "border-pds-border bg-pds-panel/60 hover:border-pds-muted"
             }`}
           >
             <button
@@ -198,29 +198,29 @@ export function ItemList({
               onClick={() => onSelect(item.id)}
               className="mb-1 w-full text-left"
             >
-              <p className="text-[10px] text-violet-400/90">
+              <p className="text-pds-caption text-emerald-400/90">
                 {reasons.join(" · ")}
               </p>
             </button>
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${typeBadgeClass(item.type)}`}
+                  className={`rounded px-1.5 py-0.5 text-pds-caption font-medium uppercase tracking-wide ${typeBadgeClass(item.type)}`}
                 >
                   {item.type}
                 </span>
                 {status !== "active" && (
-                  <span className="rounded bg-pds-chip px-1.5 py-0.5 text-[10px] text-pds-muted">
+                  <span className="rounded bg-pds-chip px-1.5 py-0.5 text-pds-caption text-pds-muted">
                     {statusLabel(status)}
                   </span>
                 )}
               </div>
-              <span className="text-[11px] text-pds-muted">
+              <span className="text-pds-sm text-pds-muted">
                 {formatTime(item.created_at)}
               </span>
             </div>
             <p
-              className={`mt-1 text-sm leading-relaxed ${
+              className={`mt-1 text-pds-base leading-relaxed ${
                 isDone
                   ? "text-pds-muted line-through"
                   : isArchived
@@ -238,7 +238,7 @@ export function ItemList({
               typeof item.metadata.title === "string" &&
               item.metadata.title.trim() &&
               meetingBodyPreview(item) && (
-                <p className="mt-0.5 text-xs text-pds-muted">
+                <p className="mt-0.5 text-pds-sm text-pds-muted">
                   {meetingBodyPreview(item)}
                 </p>
               )}
@@ -250,7 +250,7 @@ export function ItemList({
                 {item.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded bg-pds-chip px-1.5 py-0.5 text-[10px] text-pds-muted"
+                    className="rounded bg-pds-chip px-1.5 py-0.5 text-pds-caption text-pds-muted"
                   >
                     {tag.startsWith("#") ? tag : `#${tag}`}
                   </span>
@@ -305,7 +305,7 @@ function ItemActions({
         label="Edit"
         disabled={disabled}
         onClick={onEdit}
-        className="text-violet-400 hover:bg-violet-950/50"
+        className="text-emerald-400 hover:bg-emerald-950/50"
       />
       {status !== "done" && (
         <ActionButton
@@ -357,7 +357,7 @@ function ActionButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`rounded px-2 py-0.5 text-[11px] disabled:opacity-40 ${className}`}
+      className={`rounded px-2 py-0.5 text-pds-sm disabled:opacity-40 ${className}`}
     >
       {label}
     </button>
@@ -373,7 +373,7 @@ function MetadataNotesLine({
   if (!notes) return null;
 
   return (
-    <p className="mt-0.5 text-[11px] leading-snug text-pds-subtle">
+    <p className="mt-0.5 text-pds-sm leading-snug text-pds-subtle">
       {preview(notes, 200)}
     </p>
   );
@@ -398,7 +398,7 @@ function ProjectMeta({
   if (parts.length === 0) return null;
 
   return (
-    <p className="mt-1.5 text-[11px] text-pds-muted">{parts.join(" · ")}</p>
+    <p className="mt-1.5 text-pds-sm text-pds-muted">{parts.join(" · ")}</p>
   );
 }
 
@@ -414,7 +414,7 @@ function SubscriptionMeta({ metadata }: { metadata: Record<string, unknown> }) {
   if (!renewal && !amount && !cadence && !categoryLabel) return null;
 
   return (
-    <p className="mt-1.5 text-[11px] text-pds-muted">
+    <p className="mt-1.5 text-pds-sm text-pds-muted">
       {categoryLabel && <span>{categoryLabel}</span>}
       {renewal && (
         <span>
@@ -443,7 +443,7 @@ function TaskMeta({ metadata }: { metadata: Record<string, unknown> }) {
   if (!owner && !due) return null;
 
   return (
-    <p className="mt-1.5 text-[11px] text-pds-muted">
+    <p className="mt-1.5 text-pds-sm text-pds-muted">
       {owner && <span>Owner: {owner}</span>}
       {owner && due && <span> · </span>}
       {due && <span>Due: {due}</span>}

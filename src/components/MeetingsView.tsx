@@ -189,22 +189,22 @@ export function MeetingsView({
     <div className="flex min-h-0 flex-1">
       <aside className="flex w-56 shrink-0 flex-col border-r border-pds-border">
         <div className="border-b border-pds-border px-3 py-3">
-          <h2 className="text-sm font-semibold text-pds-text">Meetings</h2>
-          <p className="text-[10px] text-pds-muted">Saved notes and action items</p>
+          <h2 className="text-pds-base font-semibold text-pds-text">Meetings</h2>
+          <p className="text-pds-caption text-pds-muted">Saved notes and action items</p>
           <button
             type="button"
             onClick={startNewMeeting}
-            className="mt-2 w-full rounded bg-emerald-600 px-2 py-1.5 text-xs font-medium text-white"
+            className="pds-btn-primary mt-2 w-full px-2 py-1.5 text-pds-sm"
           >
             New meeting
           </button>
         </div>
         <ul className="min-h-0 flex-1 overflow-auto p-2">
           {loading && (
-            <li className="px-2 py-4 text-[11px] text-pds-muted">Loading…</li>
+            <li className="px-2 py-4 text-pds-sm text-pds-muted">Loading…</li>
           )}
           {error && (
-            <li className="rounded border border-red-900/50 bg-red-950/40 px-2 py-2 text-[11px] text-red-300">
+            <li className="rounded border border-red-900/50 bg-red-950/40 px-2 py-2 text-pds-sm text-red-300">
               {error}
             </li>
           )}
@@ -218,7 +218,7 @@ export function MeetingsView({
                 <button
                   type="button"
                   onClick={startNewMeeting}
-                  className="rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white"
+                  className="pds-btn-primary px-3 py-1.5 text-pds-sm"
                 >
                   New meeting
                 </button>
@@ -240,19 +240,19 @@ export function MeetingsView({
                     setEditing(false);
                     setSelectedId(item.id);
                   }}
-                  className={`w-full rounded border px-2 py-2 text-left text-[11px] transition ${
+                  className={`w-full px-2 py-2 text-left text-pds-sm transition ${
                     selected
-                      ? "border-violet-600 bg-violet-950/30 text-pds-text"
-                      : "border-pds-border bg-pds-panel/50 text-pds-text hover:border-pds-muted"
+                      ? "pds-list-item-selected text-pds-text"
+                      : "pds-list-item text-pds-text"
                   }`}
                 >
                   <p className="font-medium leading-snug">{meetingTitle(item)}</p>
                   {meetingBodyPreview(item, 60) && (
-                    <p className="mt-0.5 text-[10px] text-pds-muted line-clamp-2">
+                    <p className="mt-0.5 text-pds-caption text-pds-muted line-clamp-2">
                       {meetingBodyPreview(item, 60)}
                     </p>
                   )}
-                  <p className="mt-1 text-[10px] text-pds-subtle">
+                  <p className="mt-1 text-pds-caption text-pds-subtle">
                     {formatTime(item.created_at)}
                     {taskCount != null ? ` · ${taskCount} tasks` : ""}
                     {status !== "active" ? ` · ${status}` : ""}
@@ -277,7 +277,7 @@ export function MeetingsView({
             onSuccess={(msg) => onToast(msg, "success")}
           />
         ) : !selectedItem ? (
-          <p className="p-4 text-sm text-pds-muted">Loading…</p>
+          <p className="p-4 text-pds-base text-pds-muted">Loading…</p>
         ) : editing ? (
           <ItemEditForm
             item={selectedItem}
@@ -295,10 +295,10 @@ export function MeetingsView({
             <div className="border-b border-pds-border px-4 py-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <h2 className="text-sm font-semibold text-pds-text">
+                  <h2 className="text-pds-base font-semibold text-pds-text">
                     {meetingTitle(selectedItem)}
                   </h2>
-                  <p className="mt-0.5 text-[11px] text-pds-muted">
+                  <p className="mt-0.5 text-pds-sm text-pds-muted">
                     meeting
                     {" · "}
                     {formatTime(selectedItem.created_at)}
@@ -309,7 +309,7 @@ export function MeetingsView({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="shrink-0 rounded border border-pds-border px-3 py-1 text-xs text-pds-muted hover:bg-pds-chip"
+                  className="shrink-0 rounded border border-pds-border px-3 py-1 text-pds-sm text-pds-muted hover:bg-pds-chip"
                 >
                   Edit
                 </button>
@@ -317,18 +317,18 @@ export function MeetingsView({
             </div>
             <div className="min-h-0 flex-1 overflow-auto p-4">
               {selectedItem.content ? (
-                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-pds-text">
+                    <pre className="whitespace-pre-wrap font-sans text-pds-base leading-relaxed text-pds-text">
                       {selectedItem.content}
                     </pre>
                   ) : (
-                    <p className="text-sm text-pds-muted">No notes.</p>
+                    <p className="text-pds-base text-pds-muted">No notes.</p>
                   )}
                   {decisions.length > 0 && (
-                    <div className="mt-4 rounded border border-pds-border bg-pds-panel/50 p-3">
-                      <h3 className="text-[11px] font-medium uppercase text-pds-muted">
+                    <div className="pds-card mt-4 p-3">
+                      <h3 className="text-pds-sm font-medium uppercase text-pds-muted">
                         Decisions
                       </h3>
-                      <ul className="mt-2 list-inside list-disc text-sm text-pds-text">
+                      <ul className="mt-2 list-inside list-disc text-pds-base text-pds-text">
                         {decisions.map((d) => (
                           <li key={d}>{d}</li>
                         ))}
@@ -336,7 +336,7 @@ export function MeetingsView({
                     </div>
                   )}
               {selectedItem.tags.length > 0 && (
-                <p className="mt-4 text-[11px] text-pds-muted">
+                <p className="mt-4 text-pds-sm text-pds-muted">
                   {selectedItem.tags.join(" ")}
                 </p>
               )}
@@ -349,10 +349,10 @@ export function MeetingsView({
       {meetingDetail && (
         <aside className="flex w-80 shrink-0 flex-col border-l border-pds-border">
           <div className="border-b border-pds-border p-3">
-            <h3 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
+            <h3 className="text-pds-sm font-medium uppercase tracking-wide text-pds-muted">
               Linked tasks
             </h3>
-            <p className="mt-0.5 text-[10px] text-pds-subtle">
+            <p className="mt-0.5 text-pds-caption text-pds-subtle">
               {linkedTasks.length} task{linkedTasks.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -362,7 +362,7 @@ export function MeetingsView({
             }`}
           >
             {linkedTasks.length === 0 && (
-              <li className="px-2 py-4 text-[10px] text-pds-muted">
+              <li className="px-2 py-4 text-pds-caption text-pds-muted">
                 No linked tasks. Save with actions or add tasks later.
               </li>
             )}
@@ -373,10 +373,8 @@ export function MeetingsView({
               return (
                 <li key={task.id} className="mb-2">
                   <div
-                    className={`rounded border px-2 py-2 text-[11px] ${
-                      selectedTaskId === task.id
-                        ? "border-violet-600 bg-violet-950/30"
-                        : "border-pds-border bg-pds-panel/50"
+                    className={`pds-card px-2 py-2 text-pds-sm ${
+                      selectedTaskId === task.id ? "pds-list-item-selected" : ""
                     }`}
                   >
                     <button
@@ -388,7 +386,7 @@ export function MeetingsView({
                         {task.content.slice(0, 80)}
                         {task.content.length > 80 ? "…" : ""}
                       </p>
-                      <p className="mt-1 flex flex-wrap gap-1 text-[10px]">
+                      <p className="mt-1 flex flex-wrap gap-1 text-pds-caption">
                         <span className={statusBadge(status)}>{status}</span>
                         {overdue && (
                           <span className="text-red-400">overdue</span>
@@ -406,7 +404,7 @@ export function MeetingsView({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleTaskStatus(task, "done")}
-                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-[10px] text-emerald-200 disabled:opacity-40"
+                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-pds-caption text-emerald-200 disabled:opacity-40"
                         >
                           Done
                         </button>
@@ -415,7 +413,7 @@ export function MeetingsView({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleTaskStatus(task, "active")}
-                          className="rounded border border-pds-border px-2 py-0.5 text-[10px] text-pds-muted disabled:opacity-40"
+                          className="rounded border border-pds-border px-2 py-0.5 text-pds-caption text-pds-muted disabled:opacity-40"
                         >
                           Restore
                         </button>
@@ -423,7 +421,7 @@ export function MeetingsView({
                       <TaskFocusStartButton
                         task={task}
                         onNavigateToFocus={onNavigateToFocus}
-                        className="rounded bg-violet-600/80 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-violet-500"
+                        className="pds-btn-primary-muted px-2 py-0.5 text-pds-caption"
                       />
                     </div>
                   </div>
@@ -434,13 +432,13 @@ export function MeetingsView({
           {selectedTaskId && (
             <div className="flex min-h-0 flex-1 flex-col border-t border-pds-border">
               <div className="flex items-center justify-between gap-2 border-b border-pds-border px-3 py-2">
-                <h4 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
+                <h4 className="text-pds-sm font-medium uppercase tracking-wide text-pds-muted">
                   Edit task
                 </h4>
                 <button
                   type="button"
                   onClick={clearTaskSelection}
-                  className="rounded border border-pds-border px-2 py-0.5 text-[10px] text-pds-muted hover:bg-pds-chip"
+                  className="rounded border border-pds-border px-2 py-0.5 text-pds-caption text-pds-muted hover:bg-pds-chip"
                   aria-label="Close task editor"
                 >
                   Close
@@ -448,7 +446,7 @@ export function MeetingsView({
               </div>
               <div className="min-h-0 flex-1 overflow-auto">
                 {!selectedTask ? (
-                  <p className="p-3 text-[11px] text-pds-muted">Loading…</p>
+                  <p className="p-3 text-pds-sm text-pds-muted">Loading…</p>
                 ) : (
                   <ItemEditForm
                     item={selectedTask}

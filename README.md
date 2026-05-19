@@ -35,6 +35,13 @@
 - **Edit items** — content, tags, task owner/due/meeting link
 - All v1 features: capture, meeting parser, mark/archive/delete
 
+## Download (Windows)
+
+Pre-built installers are published on **[GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases)** (not stored in the git tree).
+
+- Download `DonePath_*_x64-setup.exe` and run it.
+- **Your data stays on your PC** — the installer does not include tasks or meetings from anyone else’s machine. Each user gets their own local database. Reinstalling on the same Windows user keeps existing data. See [RELEASING.md](RELEASING.md) for build and publish steps.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+

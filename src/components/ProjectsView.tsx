@@ -110,17 +110,17 @@ function AddProjectForm({
     >
       <FormPanelHeader title="New project" onClose={onClose} />
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <label className="block text-[11px] text-pds-muted sm:col-span-2">
+        <label className="block text-pds-sm text-pds-muted sm:col-span-2">
           Title
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={saving}
             placeholder="Project name…"
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-3 py-2 text-sm text-pds-text focus:border-pds-muted focus:outline-none"
+            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-3 py-2 text-pds-base text-pds-text focus:border-pds-muted focus:outline-none"
           />
         </label>
-        <label className="block text-[11px] text-pds-muted sm:col-span-2">
+        <label className="block text-pds-sm text-pds-muted sm:col-span-2">
           Notes
           <textarea
             value={notes}
@@ -128,16 +128,16 @@ function AddProjectForm({
             rows={3}
             disabled={saving}
             placeholder="Goals, scope, links…"
-            className="mt-1 w-full resize-y rounded border border-pds-border bg-pds-panel px-3 py-2 text-sm text-pds-text focus:border-pds-muted focus:outline-none"
+            className="mt-1 w-full resize-y rounded border border-pds-border bg-pds-panel px-3 py-2 text-pds-base text-pds-text focus:border-pds-muted focus:outline-none"
           />
         </label>
-        <label className="block text-[11px] text-pds-muted">
+        <label className="block text-pds-sm text-pds-muted">
           Status
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as ProjectStatus)}
             disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-sm text-pds-text"
+            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
           >
             {PROJECT_STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -146,7 +146,7 @@ function AddProjectForm({
             ))}
           </select>
         </label>
-        <label className="block text-[11px] text-pds-muted">
+        <label className="block text-pds-sm text-pds-muted">
           Priority
           <select
             value={priority}
@@ -154,7 +154,7 @@ function AddProjectForm({
               setPriority((e.target.value as ProjectPriority) || "")
             }
             disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-sm text-pds-text"
+            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
           >
             <option value="">None</option>
             {PROJECT_PRIORITY_OPTIONS.map((o) => (
@@ -164,7 +164,7 @@ function AddProjectForm({
             ))}
           </select>
         </label>
-        <label className="block text-[11px] text-pds-muted">
+        <label className="block text-pds-sm text-pds-muted">
           Area
           <input
             value={area}
@@ -172,7 +172,7 @@ function AddProjectForm({
             list="project-area-presets-compose"
             disabled={saving}
             placeholder="work, home…"
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-sm text-pds-text"
+            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
           />
           <datalist id="project-area-presets-compose">
             {PROJECT_AREA_PRESETS.map((a) => (
@@ -180,31 +180,31 @@ function AddProjectForm({
             ))}
           </datalist>
         </label>
-        <label className="block text-[11px] text-pds-muted">
+        <label className="block text-pds-sm text-pds-muted">
           Target date
           <input
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
             disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-sm text-pds-text"
+            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
           />
         </label>
-        <label className="block text-[11px] text-pds-muted">
+        <label className="block text-pds-sm text-pds-muted">
           Started
           <input
             type="date"
             value={startedAt}
             onChange={(e) => setStartedAt(e.target.value)}
             disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-sm text-pds-text"
+            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
           />
         </label>
       </div>
       <button
         type="submit"
         disabled={saving || !name.trim()}
-        className="mt-4 w-fit rounded bg-emerald-600 px-4 py-2 text-xs font-medium text-white disabled:opacity-40"
+        className="mt-4 w-fit pds-btn-primary px-4 py-2 text-pds-sm font-medium text-white disabled:opacity-40"
       >
         {saving ? "Creating…" : "Create project"}
       </button>
@@ -221,12 +221,12 @@ function FormPanelHeader({
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <h2 className="text-sm font-semibold text-pds-text">{title}</h2>
+      <h2 className="text-pds-base font-semibold text-pds-text">{title}</h2>
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="rounded border border-pds-border px-2 py-0.5 text-[11px] text-pds-muted hover:bg-pds-chip"
+          className="rounded border border-pds-border px-2 py-0.5 text-pds-sm text-pds-muted hover:bg-pds-chip"
         >
           Close
         </button>
@@ -281,10 +281,10 @@ function ProjectDetailBody({
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4">
       {detailRows.length > 0 && (
-        <dl className="mt-3 space-y-1.5 text-sm">
+        <dl className="mt-3 space-y-1.5 text-pds-base">
           {detailRows.map((row) => (
             <div key={row.label} className="flex gap-2">
-              <dt className="w-20 shrink-0 text-[11px] uppercase text-pds-muted">
+              <dt className="w-20 shrink-0 text-pds-sm uppercase text-pds-muted">
                 {row.label}
               </dt>
               <dd className="text-pds-text">{row.value}</dd>
@@ -295,10 +295,10 @@ function ProjectDetailBody({
       {notes ? (
         <ProjectNotesBlock notes={notes} />
       ) : (
-        <p className="mt-4 text-sm text-pds-muted">No notes.</p>
+        <p className="mt-4 text-pds-base text-pds-muted">No notes.</p>
       )}
       {item.tags.length > 0 && (
-        <p className="mt-4 text-[11px] text-pds-muted">{item.tags.join(" ")}</p>
+        <p className="mt-4 text-pds-sm text-pds-muted">{item.tags.join(" ")}</p>
       )}
     </div>
   );
@@ -306,9 +306,9 @@ function ProjectDetailBody({
 
 function ProjectNotesBlock({ notes }: { notes: string }) {
   return (
-    <div className="mt-4 rounded border border-pds-border bg-pds-panel/50 p-3">
-      <h3 className="text-[11px] font-medium uppercase text-pds-muted">Notes</h3>
-      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-pds-text">
+    <div className="pds-card mt-4 p-3">
+      <h3 className="text-pds-sm font-medium uppercase text-pds-muted">Notes</h3>
+      <p className="mt-2 whitespace-pre-wrap text-pds-base leading-relaxed text-pds-text">
         {notes}
       </p>
     </div>
@@ -372,13 +372,13 @@ function AddTaskToProjectForm({
       onSubmit={(e) => void handleSubmit(e)}
       className="border-b border-pds-border px-3 py-2"
     >
-      <p className="text-[10px] font-medium text-pds-muted">Add task</p>
+      <p className="text-pds-caption font-medium text-pds-muted">Add task</p>
       <input
         value={content}
         onChange={(e) => setContent(e.target.value)}
         disabled={saving}
         placeholder="Task title…"
-        className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-[11px] text-pds-text"
+        className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-sm text-pds-text"
       />
       <div className="mt-1 flex gap-1">
         <input
@@ -386,12 +386,12 @@ function AddTaskToProjectForm({
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           disabled={saving}
-          className="min-w-0 flex-1 rounded border border-pds-border bg-pds-panel px-2 py-1 text-[10px] text-pds-text"
+          className="min-w-0 flex-1 rounded border border-pds-border bg-pds-panel px-2 py-1 text-pds-caption text-pds-text"
         />
         <button
           type="submit"
           disabled={saving || !content.trim()}
-          className="shrink-0 rounded bg-emerald-600 px-2 py-1 text-[10px] font-medium text-white disabled:opacity-40"
+          className="shrink-0 pds-btn-primary px-2 py-1 text-pds-caption font-medium text-white disabled:opacity-40"
         >
           Add
         </button>
@@ -581,14 +581,14 @@ export function ProjectsView({
     <div className="flex min-h-0 flex-1">
       <aside className="flex w-56 shrink-0 flex-col border-r border-pds-border">
         <div className="border-b border-pds-border px-3 py-3">
-          <h2 className="text-sm font-semibold text-pds-text">Projects</h2>
-          <p className="text-[10px] text-pds-muted">
+          <h2 className="text-pds-base font-semibold text-pds-text">Projects</h2>
+          <p className="text-pds-caption text-pds-muted">
             Initiatives, targets, and linked tasks
           </p>
           <button
             type="button"
             onClick={startNewProject}
-            className="mt-2 w-full rounded bg-emerald-600 px-2 py-1.5 text-xs font-medium text-white"
+            className="mt-2 w-full pds-btn-primary px-2 py-1.5 text-pds-sm font-medium text-white"
           >
             New project
           </button>
@@ -598,7 +598,7 @@ export function ProjectsView({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search projects…"
-            className="w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-[11px] text-pds-text placeholder:text-pds-subtle focus:border-pds-muted focus:outline-none"
+            className="w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-sm text-pds-text placeholder:text-pds-subtle focus:border-pds-muted focus:outline-none"
           />
           <div className="flex flex-wrap gap-1">
             {(
@@ -613,7 +613,7 @@ export function ProjectsView({
                 key={value}
                 type="button"
                 onClick={() => setStatus(value)}
-                className={`rounded px-2 py-0.5 text-[10px] ${
+                className={`rounded px-2 py-0.5 text-pds-caption ${
                   status === value
                     ? "bg-pds-accent text-pds-accent-fg"
                     : "bg-pds-chip text-pds-chip-fg"
@@ -626,10 +626,10 @@ export function ProjectsView({
         </div>
         <ul className="min-h-0 flex-1 overflow-auto p-2">
           {loading && (
-            <li className="px-2 py-4 text-[11px] text-pds-muted">Loading…</li>
+            <li className="px-2 py-4 text-pds-sm text-pds-muted">Loading…</li>
           )}
           {error && (
-            <li className="rounded border border-red-900/50 bg-red-950/40 px-2 py-2 text-[11px] text-red-300">
+            <li className="rounded border border-red-900/50 bg-red-950/40 px-2 py-2 text-pds-sm text-red-300">
               {error}
             </li>
           )}
@@ -643,7 +643,7 @@ export function ProjectsView({
                 <button
                   type="button"
                   onClick={startNewProject}
-                  className="rounded bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white"
+                  className="pds-btn-primary px-3 py-1.5 text-pds-sm font-medium text-white"
                 >
                   New project
                 </button>
@@ -666,21 +666,21 @@ export function ProjectsView({
                     setShowAdd(false);
                     setSelectedId(item.id);
                   }}
-                  className={`w-full rounded border px-2 py-2 text-left text-[11px] transition ${
+                  className={`w-full px-2 py-2 text-left text-pds-sm transition ${
                     selected
-                      ? "border-emerald-600 bg-emerald-950/30 text-pds-text"
-                      : "border-pds-border bg-pds-panel/50 text-pds-text hover:border-pds-muted"
+                      ? "pds-list-item-selected text-pds-text"
+                      : "pds-list-item text-pds-text"
                   }`}
                 >
                   <p className="font-medium leading-snug">{item.content}</p>
                   {notesPreview && (
-                    <p className="mt-0.5 line-clamp-2 text-[10px] text-pds-muted">
+                    <p className="mt-0.5 line-clamp-2 text-pds-caption text-pds-muted">
                       {notesPreview.length > 60
                         ? `${notesPreview.slice(0, 60)}…`
                         : notesPreview}
                     </p>
                   )}
-                  <p className="mt-1 text-[10px] text-pds-subtle">
+                  <p className="mt-1 text-pds-caption text-pds-subtle">
                     {formatProjectStatusLabel(projectStatus)}
                     {rollupLine ? ` · ${rollupLine}` : ""}
                   </p>
@@ -715,14 +715,14 @@ export function ProjectsView({
                 <button
                   type="button"
                   onClick={startNewProject}
-                  className="rounded bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white"
+                  className="pds-btn-primary px-3 py-1.5 text-pds-sm font-medium text-white"
                 >
                   New project
                 </button>
               </EmptyState>
             </div>
           ) : !selectedItem ? (
-            <p className="p-4 text-sm text-pds-muted">Loading…</p>
+            <p className="p-4 text-pds-base text-pds-muted">Loading…</p>
           ) : editing ? (
             <div className="min-h-0 flex-1 overflow-auto">
               <ItemEditForm
@@ -752,10 +752,10 @@ export function ProjectsView({
       {projectDetail && (
         <aside className="flex w-80 shrink-0 flex-col border-l border-pds-border">
           <div className="border-b border-pds-border p-3">
-            <h3 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
+            <h3 className="text-pds-sm font-medium uppercase tracking-wide text-pds-muted">
               Linked tasks
             </h3>
-            <p className="mt-0.5 text-[10px] text-pds-subtle">
+            <p className="mt-0.5 text-pds-caption text-pds-subtle">
               {linkedTasks.length} task{linkedTasks.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -770,7 +770,7 @@ export function ProjectsView({
             }`}
           >
             {linkedTasks.length === 0 && (
-              <li className="px-2 py-4 text-[10px] text-pds-muted">
+              <li className="px-2 py-4 text-pds-caption text-pds-muted">
                 No linked tasks yet. Add one above.
               </li>
             )}
@@ -781,10 +781,8 @@ export function ProjectsView({
               return (
                 <li key={task.id} className="mb-2">
                   <div
-                    className={`rounded border px-2 py-2 text-[11px] ${
-                      selectedTaskId === task.id
-                        ? "border-emerald-600 bg-emerald-950/30"
-                        : "border-pds-border bg-pds-panel/50"
+                    className={`pds-card px-2 py-2 text-pds-sm ${
+                      selectedTaskId === task.id ? "pds-list-item-selected" : ""
                     }`}
                   >
                     <button
@@ -796,7 +794,7 @@ export function ProjectsView({
                         {task.content.slice(0, 80)}
                         {task.content.length > 80 ? "…" : ""}
                       </p>
-                      <p className="mt-1 flex flex-wrap gap-1 text-[10px]">
+                      <p className="mt-1 flex flex-wrap gap-1 text-pds-caption">
                         <span className={statusBadge(taskStatus)}>
                           {taskStatus}
                         </span>
@@ -816,7 +814,7 @@ export function ProjectsView({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleTaskStatus(task, "done")}
-                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-[10px] text-emerald-200 disabled:opacity-40"
+                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-pds-caption text-emerald-200 disabled:opacity-40"
                         >
                           Done
                         </button>
@@ -825,7 +823,7 @@ export function ProjectsView({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleTaskStatus(task, "active")}
-                          className="rounded border border-pds-border px-2 py-0.5 text-[10px] text-pds-muted disabled:opacity-40"
+                          className="rounded border border-pds-border px-2 py-0.5 text-pds-caption text-pds-muted disabled:opacity-40"
                         >
                           Restore
                         </button>
@@ -833,7 +831,7 @@ export function ProjectsView({
                       <TaskFocusStartButton
                         task={task}
                         onNavigateToFocus={onNavigateToFocus}
-                        className="rounded bg-violet-600/80 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-violet-500"
+                        className="pds-btn-primary-muted px-2 py-0.5 text-pds-caption"
                       />
                     </div>
                   </div>
@@ -844,13 +842,13 @@ export function ProjectsView({
           {selectedTaskId && (
             <div className="flex min-h-0 flex-1 flex-col border-t border-pds-border">
               <div className="flex items-center justify-between gap-2 border-b border-pds-border px-3 py-2">
-                <h4 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
+                <h4 className="text-pds-sm font-medium uppercase tracking-wide text-pds-muted">
                   Edit task
                 </h4>
                 <button
                   type="button"
                   onClick={clearTaskSelection}
-                  className="rounded border border-pds-border px-2 py-0.5 text-[10px] text-pds-muted hover:bg-pds-chip"
+                  className="rounded border border-pds-border px-2 py-0.5 text-pds-caption text-pds-muted hover:bg-pds-chip"
                   aria-label="Close task editor"
                 >
                   Close
@@ -858,7 +856,7 @@ export function ProjectsView({
               </div>
               <div className="min-h-0 flex-1 overflow-auto">
                 {!selectedTask ? (
-                  <p className="p-3 text-[11px] text-pds-muted">Loading…</p>
+                  <p className="p-3 text-pds-sm text-pds-muted">Loading…</p>
                 ) : (
                   <ItemEditForm
                     item={selectedTask}
@@ -893,15 +891,15 @@ function DetailHeader({
     <div className="border-b border-pds-border px-4 py-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-pds-text">{item.content}</h2>
-          <p className="mt-0.5 text-[11px] text-pds-muted">
+          <h2 className="text-pds-base font-semibold text-pds-text">{item.content}</h2>
+          <p className="mt-0.5 text-pds-sm text-pds-muted">
             project · {formatProjectStatusLabel(projectStatus)}
           </p>
         </div>
         <button
           type="button"
           onClick={onEdit}
-          className="shrink-0 rounded border border-pds-border px-3 py-1 text-xs text-pds-muted hover:bg-pds-chip"
+          className="shrink-0 rounded border border-pds-border px-3 py-1 text-pds-sm text-pds-muted hover:bg-pds-chip"
         >
           Edit
         </button>

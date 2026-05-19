@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/*
+ * DonePath typography scale (IBM Plex Sans)
+ *
+ * caption (10px / 0.625rem) — meta, badges, timestamps, chip labels
+ * sm      (11px / 0.6875rem) — dense lists, section labels, compact controls
+ * base    (14px / 0.875rem)  — default body, inputs, list primary text
+ * lg      (16px / 1rem)      — panel titles, emphasis (use sparingly)
+ *
+ * Utilities: text-pds-caption | text-pds-sm | text-pds-base | text-pds-lg
+ * Aliases:   pds-text-caption | pds-text-sm | pds-text-base | pds-text-lg
+ */
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --pds-font-sans:
+    "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --pds-text-caption: 0.625rem;
+  --pds-text-sm: 0.6875rem;
+  --pds-text-base: 0.875rem;
+  --pds-text-lg: 1rem;
   --pds-bg: #fafafa;
   --pds-panel: #ffffff;
   --pds-panel-2: #f4f4f5;
@@ -41,6 +60,15 @@
 }
 
 @theme {
+  --font-sans: var(--pds-font-sans);
+  --font-size-pds-caption: var(--pds-text-caption);
+  --font-size-pds-caption--line-height: 1.25;
+  --font-size-pds-sm: var(--pds-text-sm);
+  --font-size-pds-sm--line-height: 1.35;
+  --font-size-pds-base: var(--pds-text-base);
+  --font-size-pds-base--line-height: 1.5;
+  --font-size-pds-lg: var(--pds-text-lg);
+  --font-size-pds-lg--line-height: 1.5;
   --color-pds-bg: var(--pds-bg);
   --color-pds-panel: var(--pds-panel);
   --color-pds-panel-2: var(--pds-panel-2);
@@ -58,9 +86,15 @@
 body {
   margin: 0;
   min-height: 100vh;
+  font-family: var(--pds-font-sans);
   background-color: var(--pds-bg);
   color: var(--pds-text);
   -webkit-font-smoothing: antialiased;
+}
+
+.pds-wordmark {
+  font-weight: 600;
+  letter-spacing: -0.03em;
 }
 
 #root {
@@ -238,6 +272,75 @@ body {
 
 .pds-timer-mode {
   animation: pds-view-enter var(--pds-motion-timer) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@layer utilities {
+  .pds-text-caption {
+    font-size: var(--pds-text-caption);
+    line-height: 1.25;
+  }
+
+  .pds-text-sm {
+    font-size: var(--pds-text-sm);
+    line-height: 1.35;
+  }
+
+  .pds-text-base {
+    font-size: var(--pds-text-base);
+    line-height: 1.5;
+  }
+
+  .pds-text-lg {
+    font-size: var(--pds-text-lg);
+    line-height: 1.5;
+  }
+}
+
+/* DonePath signature: corner language — squarer panels/lists (rounded-sm), rounder CTAs (rounded-md). */
+@layer components {
+  .pds-card {
+    @apply rounded-sm border border-pds-border bg-pds-panel/50;
+  }
+
+  .pds-btn-primary {
+    @apply rounded-md bg-emerald-600 font-medium text-white hover:bg-emerald-500 disabled:opacity-40;
+  }
+
+  .pds-btn-primary-muted {
+    @apply rounded-md bg-emerald-600/80 font-medium text-white hover:bg-emerald-500 disabled:opacity-40;
+  }
+
+  .pds-chip-active {
+    @apply bg-emerald-600 text-white;
+  }
+
+  .pds-inbox-item {
+    @apply rounded-sm border px-3 py-2.5 transition;
+  }
+
+  .pds-list-item {
+    @apply rounded-sm border border-pds-border bg-pds-panel/50 transition hover:border-pds-muted;
+  }
+
+  .pds-list-item-selected {
+    @apply rounded-sm border-emerald-600 bg-emerald-950/30;
+  }
+
+  .pds-picker-hover {
+    @apply transition hover:border-emerald-500/50 hover:bg-emerald-950/20;
+  }
+
+  .pds-picker-row-hover {
+    @apply hover:bg-emerald-950/25;
+  }
+
+  .pds-timer-accent {
+    @apply font-mono text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-300;
+  }
+
+  .pds-focus-outline {
+    @apply border-emerald-700/50 text-emerald-700 dark:text-emerald-300;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
