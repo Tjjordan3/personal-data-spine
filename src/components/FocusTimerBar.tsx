@@ -46,7 +46,7 @@ export function FocusTimerBar() {
                 <button
                   type="button"
                   onClick={() => timer.togglePause()}
-                  className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-text"
+                  className="pds-btn-secondary px-3 py-1.5 text-xs"
                 >
                   {timer.phase === "paused" ? "Resume" : "Pause"}
                 </button>
@@ -120,7 +120,7 @@ export function FocusTimerBar() {
                     <button
                       type="button"
                       onClick={() => timer.openTaskPicker()}
-                      className="rounded border border-pds-border px-2.5 py-1 text-[11px] text-pds-text"
+                      className="pds-btn-secondary px-2.5 py-1 text-[11px]"
                     >
                       {timer.taskId ? "Change task" : "Pick task"}
                     </button>
@@ -151,7 +151,7 @@ export function FocusTimerBar() {
                     <button
                       type="button"
                       onClick={() => timer.togglePause()}
-                      className="rounded border border-pds-border px-2.5 py-1 text-[11px] text-pds-text"
+                      className="pds-btn-secondary px-2.5 py-1 text-[11px]"
                     >
                       {timer.phase === "paused" ? "Resume" : "Pause"}
                     </button>

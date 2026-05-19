@@ -622,7 +622,7 @@ export function ProjectsView({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleTaskStatus(task, "done")}
-                          className="rounded bg-emerald-800/50 px-2 py-0.5 text-pds-caption text-emerald-200 disabled:opacity-40"
+                          className="pds-btn-primary-muted px-2 py-0.5 text-pds-caption disabled:opacity-40"
                         >
                           Done
                         </button>

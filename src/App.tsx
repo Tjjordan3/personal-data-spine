@@ -358,8 +358,8 @@ export default function App() {
             toastExiting ? "pds-toast-exit" : "pds-toast-enter"
           } ${
             toast.kind === "success"
-              ? "bg-emerald-950/60 text-emerald-300"
-              : "bg-red-950/60 text-red-300"
+              ? "border border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-transparent dark:bg-emerald-950/60 dark:text-emerald-300"
+              : "border border-red-200 bg-red-50 text-red-900 dark:border-transparent dark:bg-red-950/60 dark:text-red-300"
           }`}
         >
           {toast.message}

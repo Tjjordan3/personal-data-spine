@@ -203,21 +203,21 @@ function FocusViewBody({
               <button
                 type="button"
                 onClick={() => onQuickCreate("subscription")}
-                className="rounded border border-pds-border px-3 py-1.5 text-pds-sm text-pds-text"
+                className="pds-btn-secondary px-3 py-1.5 text-pds-sm"
               >
                 New subscription
               </button>
               <button
                 type="button"
                 onClick={() => onQuickCreate("project")}
-                className="rounded border border-emerald-800/60 px-3 py-1.5 text-pds-sm text-emerald-300"
+                className="pds-btn-accent-outline px-3 py-1.5 text-pds-sm"
               >
                 New project
               </button>
               <button
                 type="button"
                 onClick={toggleCapture}
-                className="rounded border border-pds-border px-3 py-1.5 text-pds-sm text-pds-text"
+                className="pds-btn-secondary px-3 py-1.5 text-pds-sm"
               >
                 Quick capture
               </button>

@@ -46,10 +46,14 @@ function preview(content: string, max = 160): string {
 }
 
 function typeBadgeClass(type: ItemType): string {
-  if (type === "meeting") return "bg-violet-900/50 text-violet-200";
-  if (type === "task") return "bg-amber-900/50 text-amber-200";
-  if (type === "subscription") return "bg-sky-900/50 text-sky-200";
-  if (type === "project") return "bg-emerald-900/50 text-emerald-200";
+  if (type === "meeting")
+    return "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200";
+  if (type === "task")
+    return "bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200";
+  if (type === "subscription")
+    return "bg-sky-100 text-sky-900 dark:bg-sky-900/50 dark:text-sky-200";
+  if (type === "project")
+    return "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200";
   return "bg-pds-chip text-pds-chip-fg";
 }
 
@@ -305,14 +309,14 @@ function ItemActions({
         label="Edit"
         disabled={disabled}
         onClick={onEdit}
-        className="text-emerald-400 hover:bg-emerald-950/50"
+        className="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
       />
       {status !== "done" && (
         <ActionButton
           label="Done"
           disabled={disabled}
           onClick={() => void onMark(item.id, "done")}
-          className="text-emerald-400 hover:bg-emerald-950/50"
+          className="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
         />
       )}
       {status !== "archived" && (
