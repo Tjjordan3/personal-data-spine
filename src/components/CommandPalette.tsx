@@ -14,7 +14,7 @@ import type { Item, ItemType } from "../lib/db/types";
 import { useAnimatedPresence } from "../lib/useAnimatedPresence";
 import { useFocusTimer } from "./FocusTimerContext";
 
-const MODAL_EXIT_MS = 240;
+const MODAL_EXIT_MS = 170;
 
 export type AppView =
   | "focus"

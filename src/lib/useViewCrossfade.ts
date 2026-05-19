@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const VIEW_FADE_MS = 200;
+const VIEW_FADE_MS = 160;
 
 /**
  * Crossfade between views: fade out, swap content, fade in.

@@ -16,11 +16,12 @@
   --pds-chip: #f4f4f5;
   --pds-chip-fg: #3f3f46;
   --pds-hover: #27272a;
-  --pds-motion-view: 280ms;
-  --pds-motion-modal-backdrop: 200ms;
-  --pds-motion-modal-panel: 280ms;
-  --pds-motion-toast: 300ms;
-  --pds-motion-timer: 250ms;
+  --pds-motion-view: 210ms;
+  --pds-motion-modal-backdrop: 150ms;
+  --pds-motion-modal-panel: 210ms;
+  --pds-motion-exit: 170ms;
+  --pds-motion-toast: 230ms;
+  --pds-motion-timer: 180ms;
 }
 
 .dark {
@@ -206,7 +207,7 @@ body {
 }
 
 .pds-fade-out {
-  animation: pds-fade-out 240ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: pds-fade-out var(--pds-motion-exit) cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .pds-modal-backdrop {
@@ -223,7 +224,8 @@ body {
 }
 
 .pds-modal-panel-exit {
-  animation: pds-modal-panel-out 240ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: pds-modal-panel-out var(--pds-motion-exit)
+    cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .pds-toast-enter {
