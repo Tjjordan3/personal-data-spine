@@ -65,6 +65,8 @@ Unsigned builds may trigger Windows SmartScreen; users can choose **More info �
 
 3. The **Release** workflow builds on `windows-latest` and uploads the NSIS (and MSI) assets to a new GitHub Release for that tag.
 
+`package-lock.json` must be committed and in sync with `package.json` (CI runs `npm ci`). If a tagged release fails, fix the workflow or lockfile on `v6`, push, then re-push the tag (see below) or run **Actions → Release → Run workflow**.
+
 ## Publish manually (one-off)
 
 1. Run `npm run tauri build` locally.

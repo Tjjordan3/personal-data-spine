@@ -7,6 +7,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 jobs:
   release-windows:
@@ -21,14 +22,24 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/*"
+          node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Verify package lock
+        shell: pwsh
+        run: |
+          if (-not (Test-Path package-lock.json)) {
+            throw "package-lock.json is required for npm ci"
+          }
+          node --version
+          npm --version
+
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Build and publish Tauri bundles
         uses: tauri-apps/tauri-action@v0
