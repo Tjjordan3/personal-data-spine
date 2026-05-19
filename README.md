@@ -1,4 +1,4 @@
-# DonePath (v6)
+# DonePath (v7)
 
 **DonePath** is a local-first desktop app for tasks, meetings, and focus on your computer. Built with Tauri 2, React, TypeScript, and SQLite.
 
@@ -12,7 +12,15 @@
 - **v6 snapshot (frozen):** `../personal-data-spine-v6/` and [V6.md](V6.md)
 - **v7 scope (active):** [V7.md](V7.md) on branch `v7`
 
-## v6 updates (current)
+## v7 updates (0.3.0)
+
+- **Link suggestions** — confirm before linking after meeting save; no silent graph links
+- **Focus spine** — project/meeting context on task rows; one click to open linked hub
+- **LLM firewall** — documented opt-in, local-by-default, Meetings-only rule
+
+See [V7.md](V7.md) for full backlog.
+
+## v6 updates
 
 - **Projects hub** — 3-column layout (list, detail, linked tasks) aligned with Meetings
 - **Subscriptions hub** — same 3-column pattern; renewal detail in center; Windows renewal toasts (Settings toggle, 7-day window)

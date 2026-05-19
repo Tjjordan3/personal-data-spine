@@ -1,6 +1,6 @@
 [package]
 name = "personal-data-spine"
-version = "0.2.0"
+version = "0.3.0"
 description = "DonePath — local-first tasks, meetings, and focus on your computer"
 authors = ["you"]
 edition = "2021"
