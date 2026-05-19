@@ -1,6 +1,9 @@
 use std::fs;
-use tauri::{Emitter, Manager, RunEvent, WindowEvent};
+use tauri::{Emitter, Manager};
+#[cfg(target_os = "macos")]
+use tauri::{RunEvent, WindowEvent};
 
+#[cfg(target_os = "macos")]
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window("main") {
         let _ = win.show();
@@ -147,16 +150,16 @@ pub fn run() {
                 let _ = main_win.unminimize();
                 let _ = main_win.set_focus();
 
-                let main_for_close = main_win.clone();
-                main_win.on_window_event(move |event| {
-                    if let WindowEvent::CloseRequested { api, .. } = event {
-                        #[cfg(target_os = "macos")]
-                        {
+                #[cfg(target_os = "macos")]
+                {
+                    let main_for_close = main_win.clone();
+                    main_win.on_window_event(move |event| {
+                        if let WindowEvent::CloseRequested { api, .. } = event {
                             api.prevent_close();
                             let _ = main_for_close.hide();
                         }
-                    }
-                });
+                    });
+                }
             }
 
             let handle = app.handle().clone();
@@ -193,13 +196,13 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app_handle, event| {
-            match event {
-                RunEvent::Reopen { has_visible_windows, .. } => {
-                    if !has_visible_windows {
-                        show_main_window(app_handle);
-                    }
+            #[cfg(target_os = "macos")]
+            if let RunEvent::Reopen { has_visible_windows, .. } = event {
+                if !has_visible_windows {
+                    show_main_window(app_handle);
                 }
-                _ => {}
             }
+            #[cfg(not(target_os = "macos"))]
+            let _ = (app_handle, event);
         });
 }
