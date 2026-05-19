@@ -9,7 +9,7 @@ import {
 import type { ParsedAction } from "./types";
 
 const ACTION_LINE =
-  /^(?:[-*•]\s*|\d+[.)]\s*|(?:ACTION|TODO|TASK)\s*:\s*)(.+)$/i;
+  /^(?:(?:[-*•]\s*|\d+[.)]\s*)(?:(?:ACTION|TODO|TASK)\s*:\s*)?|(?:ACTION|TODO|TASK)\s*:\s*)(.+)$/i;
 
 const DECISION_LINE =
   /^(?:[-*•]\s*|\d+[.)]\s*)?(?:DECISION)\s*:\s*(.+)$/i;
@@ -26,6 +26,8 @@ const DUE_PATTERNS = [
   /\bby\s+(\d{4}-\d{2}-\d{2})\b/i,
   /\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b/,
   /\bby\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+  /\bon\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+  /\bby\s+(tomorrow|today|eow|end of week|next week)\b/i,
   /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
   /\b(tomorrow|today|eow|end of week|next week)\b/i,
 ];

@@ -5,6 +5,11 @@ import { listActiveProjectsForPicker } from "../lib/db/projects";
 import { parseMeetingNotes } from "../lib/meeting/heuristicParser";
 import { MEETING_TEMPLATES } from "../lib/meeting/templates";
 import {
+  loadUserMeetingTemplates,
+  meetingBodyAsTemplate,
+  saveUserMeetingTemplate,
+} from "../lib/meeting/userTemplates";
+import {
   loadLlmSettings,
   refineMeetingNotes,
   type LlmSettings,
@@ -12,10 +17,18 @@ import {
 import type { ParsedAction } from "../lib/meeting/types";
 import type { Item } from "../lib/db/types";
 
+export interface MeetingSaveResult {
+  meetingId: string;
+  tasks: Item[];
+}
+
 interface MeetingModeProps {
-  onSaved: (meetingId: string) => void;
+  onSaved: (result: MeetingSaveResult) => void;
   onError: (message: string) => void;
   onSuccess: (message: string) => void;
+  initialTemplateId?: string | null;
+  /** Prefill compose from a prior meeting (duplicate structure). */
+  duplicateFrom?: { content: string; title?: string | null } | null;
 }
 
 function isTextareaTarget(target: EventTarget | null): boolean {
@@ -27,6 +40,8 @@ export function MeetingMode({
   onSaved,
   onError,
   onSuccess,
+  initialTemplateId = null,
+  duplicateFrom = null,
 }: MeetingModeProps) {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
@@ -36,10 +51,31 @@ export function MeetingMode({
   const [saving, setSaving] = useState(false);
   const [llmSettings] = useState<LlmSettings>(() => loadLlmSettings());
   const [projects, setProjects] = useState<Item[]>([]);
+  const [userTemplates, setUserTemplates] = useState(() =>
+    loadUserMeetingTemplates(),
+  );
 
   useEffect(() => {
     void listActiveProjectsForPicker().then(setProjects);
+    setUserTemplates(loadUserMeetingTemplates());
   }, []);
+
+  useEffect(() => {
+    if (!initialTemplateId) return;
+    const template = MEETING_TEMPLATES.find((t) => t.id === initialTemplateId);
+    if (!template) return;
+    setNotes(template.body);
+    setActions([]);
+    setDecisions([]);
+  }, [initialTemplateId]);
+
+  useEffect(() => {
+    if (!duplicateFrom?.content) return;
+    setNotes(duplicateFrom.content);
+    setTitle(duplicateFrom.title?.trim() ?? "");
+    setActions([]);
+    setDecisions([]);
+  }, [duplicateFrom]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -126,7 +162,7 @@ export function MeetingMode({
       setNotes("");
       setActions([]);
       setDecisions([]);
-      onSaved(result.meeting.id);
+      onSaved({ meetingId: result.meeting.id, tasks: result.tasks });
     } catch (err) {
       const message =
         err instanceof Error
@@ -141,11 +177,24 @@ export function MeetingMode({
   }
 
   function applyTemplate(templateId: string) {
-    const template = MEETING_TEMPLATES.find((t) => t.id === templateId);
+    const template =
+      MEETING_TEMPLATES.find((t) => t.id === templateId) ??
+      userTemplates.find((t) => t.id === templateId);
     if (!template) return;
     setNotes(template.body);
     setActions([]);
     setDecisions([]);
+  }
+
+  function saveNotesAsTemplate() {
+    if (!notes.trim()) {
+      onError("Add meeting notes before saving a template.");
+      return;
+    }
+    const template = meetingBodyAsTemplate(notes, title);
+    saveUserMeetingTemplate(template);
+    setUserTemplates(loadUserMeetingTemplates());
+    onSuccess(`Saved template “${template.label}”.`);
   }
 
   function updateAction(id: string, patch: Partial<ParsedAction>) {
@@ -187,6 +236,24 @@ export function MeetingMode({
             {t.label}
           </button>
         ))}
+        {userTemplates.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => applyTemplate(t.id)}
+            className="rounded border border-emerald-800/50 px-2 py-0.5 text-[10px] text-emerald-700 dark:text-emerald-300 hover:bg-pds-chip"
+          >
+            {t.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={saveNotesAsTemplate}
+          disabled={!notes.trim()}
+          className="rounded border border-pds-border px-2 py-0.5 text-[10px] text-pds-muted hover:bg-pds-chip disabled:opacity-40"
+        >
+          Save as template
+        </button>
         <span className="ml-auto text-[10px] text-pds-subtle">
           Ctrl+Enter parse · Ctrl+S save
         </span>

@@ -40,6 +40,12 @@ export interface TaskMetadata {
   snoozed_until?: string | null;
   /** One-line outcome note when marking done from Focus. */
   outcome?: string | null;
+  /**
+   * Recurrence: `{ interval: 'weekly'|'monthly'|'yearly', anchor_date?: 'YYYY-MM-DD' }`
+   * or `recurrence_rule` with the same interval string.
+   */
+  recurrence?: { interval: string; anchor_date?: string } | null;
+  recurrence_rule?: string | null;
 }
 
 export interface MeetingMetadata {
@@ -57,6 +63,9 @@ export interface SubscriptionMetadata {
   service?: string | null;
   /** Free-text notes (e.g. cancel reminders); not shown in title/content. */
   notes?: string | null;
+  /** Optional recurrence alignment when renewal_date drifts from cadence. */
+  recurrence?: { interval: string; anchor_date?: string } | null;
+  recurrence_rule?: string | null;
 }
 
 export type ProjectStatus =

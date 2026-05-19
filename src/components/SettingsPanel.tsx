@@ -12,12 +12,16 @@ import {
   formatLastBackup,
   importSqliteRestore,
 } from "../lib/backup";
+import { exportTasksIcs } from "../lib/calendar/icsExport";
+import { importNotesFromFolder } from "../lib/import/markdownFolder";
+import { emit } from "@tauri-apps/api/event";
 import {
   loadSettings,
   saveSettings,
   type AppSettings,
   type ThemePreference,
 } from "../lib/settings";
+import { getSchemaVersion, CURRENT_SCHEMA_VERSION } from "../lib/db/schema";
 import { applyTheme } from "../lib/theme";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -39,10 +43,14 @@ export function SettingsPanel({
     loadLlmSettings(),
   );
   const [dbPath, setDbPath] = useState("");
+  const [schemaVersion, setSchemaVersion] = useState<number | null>(null);
   const [backupBusy, setBackupBusy] = useState(false);
 
   useEffect(() => {
     void loadDbPath();
+    void getSchemaVersion()
+      .then(setSchemaVersion)
+      .catch(() => setSchemaVersion(null));
   }, []);
 
   async function loadDbPath() {
@@ -98,6 +106,48 @@ export function SettingsPanel({
     } catch (err) {
       onToast(
         err instanceof Error ? err.message : "JSON export failed",
+        "error",
+      );
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  async function handleExportIcs() {
+    setBackupBusy(true);
+    try {
+      const result = await exportTasksIcs();
+      if (!result) return;
+      if (result.count === 0) {
+        onToast("No active tasks with due dates to export.", "error");
+        return;
+      }
+      onToast(`Exported ${result.count} task(s) to calendar file.`, "success");
+    } catch (err) {
+      onToast(
+        err instanceof Error ? err.message : "ICS export failed",
+        "error",
+      );
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  async function handleImportMarkdown() {
+    setBackupBusy(true);
+    try {
+      const { imported, skipped } = await importNotesFromFolder();
+      if (imported === 0 && skipped === 0) return;
+      await emit("item:saved", {});
+      onToast(
+        imported > 0
+          ? `Imported ${imported} note(s)${skipped > 0 ? ` · ${skipped} skipped` : ""}.`
+          : `No new files (${skipped} already imported).`,
+        imported > 0 ? "success" : "error",
+      );
+    } catch (err) {
+      onToast(
+        err instanceof Error ? err.message : "Import failed",
         "error",
       );
     } finally {
@@ -164,6 +214,29 @@ export function SettingsPanel({
           override.
         </p>
         <ThemeToggle value={appSettings.theme} onChange={handleThemeChange} />
+      </section>
+
+      <section className="space-y-2 rounded-lg border border-pds-border p-3">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-pds-muted">
+          Subscriptions
+        </h3>
+        <label className="flex items-center gap-2 text-xs text-pds-muted">
+          <input
+            type="checkbox"
+            checked={appSettings.subscriptionRenewalReminders}
+            onChange={(e) =>
+              setAppSettings((s) => ({
+                ...s,
+                subscriptionRenewalReminders: e.target.checked,
+              }))
+            }
+          />
+          Windows toast when a renewal is due within 7 days
+        </label>
+        <p className="text-[11px] text-pds-subtle">
+          Local reminders only — no cloud. One toast per subscription per
+          renewal date per day. Click a notification to open Subscriptions.
+        </p>
       </section>
 
       <section className="space-y-2 rounded-lg border border-pds-border p-3">
@@ -266,6 +339,22 @@ export function SettingsPanel({
           </p>
         )}
         <p className="text-[11px] text-pds-muted">
+          Database schema:{" "}
+          <span className="font-medium text-pds-text">
+            v{schemaVersion ?? "…"}
+          </span>
+          {schemaVersion !== null && schemaVersion < CURRENT_SCHEMA_VERSION && (
+            <span className="text-amber-600 dark:text-amber-400">
+              {" "}
+              (migrating to v{CURRENT_SCHEMA_VERSION}…)
+            </span>
+          )}
+        </p>
+        <p className="text-[11px] text-pds-subtle">
+          App updates may migrate your local database automatically. Export a
+          backup before major upgrades.
+        </p>
+        <p className="text-[11px] text-pds-muted">
           Last backup: {formatLastBackup(appSettings.lastBackupAt)}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -288,6 +377,22 @@ export function SettingsPanel({
           <button
             type="button"
             disabled={backupBusy}
+            onClick={() => void handleExportIcs()}
+            className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted disabled:opacity-50"
+          >
+            Export calendar (.ics)
+          </button>
+          <button
+            type="button"
+            disabled={backupBusy}
+            onClick={() => void handleImportMarkdown()}
+            className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted disabled:opacity-50"
+          >
+            Import notes from folder
+          </button>
+          <button
+            type="button"
+            disabled={backupBusy}
             onClick={() => void handleRestore()}
             className="rounded border border-red-800/60 px-3 py-1.5 text-xs text-red-400 disabled:opacity-50"
           >
@@ -305,7 +410,7 @@ export function SettingsPanel({
           LLM refinement
         </h3>
         <p className="text-pds-caption leading-relaxed text-pds-muted">
-          Off by default. When enabled, <strong className="font-medium text-pds-text">meeting note text</strong> is sent to the provider you choose so it can suggest action items. Ollama usually stays on this PC; OpenAI sends notes to the cloud. API keys are stored locally on this device (not encrypted). See{" "}
+          Off by default. <strong className="font-medium text-pds-text">Meetings only</strong> — no AI on Focus, inbox, or projects. When enabled, meeting note text is sent to the provider you choose so it can suggest action items. Ollama usually stays on this PC; OpenAI sends notes to the cloud. API keys are stored locally on this device (not encrypted). See{" "}
           <a
             href="https://github.com/Tjjordan3/personal-data-spine/blob/main/SECURITY.md"
             className="text-emerald-700 underline decoration-emerald-700/40 hover:text-emerald-600 dark:text-emerald-400"

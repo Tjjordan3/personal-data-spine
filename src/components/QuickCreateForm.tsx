@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { emit } from "@tauri-apps/api/event";
 import { insertItem, listItems } from "../lib/db/items";
-import { linkMeetingTask } from "../lib/db/links";
 import { listActiveProjectsForPicker } from "../lib/db/projects";
 import { detectTags } from "../lib/tags/keywordTagger";
 import type { Item, ItemType, ProjectPriority } from "../lib/db/types";
@@ -99,13 +98,6 @@ export function QuickCreateForm({
             project_id: projectId.trim() || null,
           },
         });
-        if (linkedMeeting) {
-          try {
-            await linkMeetingTask(linkedMeeting, saved.id);
-          } catch {
-            /* metadata.meeting_id still links logically */
-          }
-        }
         await emit("item:saved", {});
         onCreated(saved);
         onToast("Task created.", "success");

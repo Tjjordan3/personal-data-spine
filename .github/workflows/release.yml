@@ -41,6 +41,60 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Generate release notes
+        id: release_notes
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $repo = "${{ github.repository }}"
+          $prev = ""
+          try {
+            $prev = (git describe --tags --abbrev=0 "HEAD^" 2>$null).Trim()
+          } catch {
+            $prev = ""
+          }
+
+          $changelog = ""
+          if ($prev) {
+            $changelog = (git log "$prev..HEAD" --pretty=format:"- %s (%h)" --no-merges) -join "`n"
+          }
+
+          $generated = ""
+          if (Get-Command gh -ErrorAction SilentlyContinue) {
+            try {
+              $generated = (gh release generate-notes --tag $tag --repo $repo 2>$null | Out-String).Trim()
+            } catch {
+              $generated = ""
+            }
+          }
+
+          $body = @"
+          Windows x64 installer for DonePath **$tag**.
+
+          **Privacy:** The installer does not include any user data. Each install uses a fresh local SQLite database on that machine. See [RELEASING.md](https://github.com/$repo/blob/main/RELEASING.md).
+
+          ### Install
+          Download ``DonePath_*_x64-setup.exe`` and run it. If SmartScreen appears, choose **More info → Run anyway** (unsigned build).
+
+          ### Files
+          - **NSIS setup (.exe)** — recommended for most users
+          - **MSI** — alternative installer format
+          "@.Trim()
+
+          if ($generated) {
+            $body += "`n`n### Release notes`n`n$generated"
+          } elseif ($changelog) {
+            $label = if ($prev) { "Changes since $prev" } else { "Changes" }
+            $body += "`n`n### $label`n`n$changelog"
+          }
+
+          $delimiter = "RELEASE_BODY_EOF"
+          "body<<$delimiter" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $body | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $delimiter | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Build and publish Tauri bundles
         uses: tauri-apps/tauri-action@v0
         env:
@@ -48,17 +102,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: DonePath ${{ github.ref_name }}
-          releaseBody: |
-            Windows x64 installer for DonePath.
-
-            **Privacy:** The installer does not include any user data. Each install uses a fresh local SQLite database on that machine. See [RELEASING.md](https://github.com/${{ github.repository }}/blob/main/RELEASING.md).
-
-            ### Install
-            Download `DonePath_*_x64-setup.exe` and run it. If SmartScreen appears, choose **More info → Run anyway** (unsigned build).
-
-            ### Files
-            - **NSIS setup (.exe)** — recommended for most users
-            - **MSI** — alternative installer format
+          releaseBody: ${{ steps.release_notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: --target x86_64-pc-windows-msvc

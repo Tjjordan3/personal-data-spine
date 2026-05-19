@@ -23,7 +23,7 @@
         "label": "capture",
         "title": "Capture",
         "width": 440,
-        "height": 200,
+        "height": 300,
         "decorations": false,
         "transparent": true,
         "shadow": false,
@@ -31,7 +31,7 @@
         "visible": false,
         "skipTaskbar": true,
         "center": true,
-        "resizable": false
+        "resizable": true
       }
     ],
     "security": {

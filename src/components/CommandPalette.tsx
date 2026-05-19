@@ -6,10 +6,15 @@ import {
   useState,
   type MouseEvent,
 } from "react";
-import { insertItem, listItems } from "../lib/db/items";
-import { searchWithFacets } from "../lib/db/search";
-import { NOTE_TEMPLATES } from "../lib/capture/templates";
 import { emit } from "@tauri-apps/api/event";
+import { exportTasksIcs } from "../lib/calendar/icsExport";
+import { insertItem, listItems } from "../lib/db/items";
+import { importNotesFromFolder } from "../lib/import/markdownFolder";
+import { listActiveProjectsForPicker } from "../lib/db/projects";
+import { searchWithFacets } from "../lib/db/search";
+import { exportSqliteBackup } from "../lib/backup";
+import { NOTE_TEMPLATES } from "../lib/capture/templates";
+import { MEETING_TEMPLATES } from "../lib/meeting/templates";
 import type { Item, ItemType } from "../lib/db/types";
 import { useAnimatedPresence } from "../lib/useAnimatedPresence";
 import { useFocusTimer } from "./FocusTimerContext";
@@ -28,6 +33,9 @@ export interface CommandPaletteActions {
   setView: (view: AppView) => void;
   openInboxQuickCreate: (type: ItemType) => void;
   openInboxWithSelection: (id: string) => void;
+  focusProject: (projectId: string) => void;
+  composeMeetingFromTemplate: (templateId: string) => void;
+  onToast?: (message: string, kind: "success" | "error") => void;
 }
 
 interface CommandPaletteProps {
@@ -36,7 +44,13 @@ interface CommandPaletteProps {
   actions: CommandPaletteActions;
 }
 
-type CommandKind = "action" | "navigate" | "item";
+type CommandKind =
+  | "action"
+  | "navigate"
+  | "item"
+  | "project"
+  | "meeting"
+  | "backup";
 
 interface PaletteCommand {
   id: string;
@@ -45,6 +59,23 @@ interface PaletteCommand {
   hint?: string;
   keywords?: string;
   run: () => void | Promise<void>;
+}
+
+function kindLabel(kind: CommandKind): string {
+  switch (kind) {
+    case "navigate":
+      return "Go";
+    case "project":
+      return "Project";
+    case "meeting":
+      return "Meeting";
+    case "backup":
+      return "Data";
+    case "item":
+      return "Item";
+    default:
+      return "Action";
+  }
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -86,6 +117,7 @@ export function CommandPalette({
   const paletteVisible = entered && !exiting;
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<Item[]>([]);
+  const [projects, setProjects] = useState<Item[]>([]);
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -95,6 +127,7 @@ export function CommandPalette({
     setHighlight(0);
     const id = window.setTimeout(() => inputRef.current?.focus(), 0);
     void listItems({ status: "active", limit: 120 }).then(setItems);
+    void listActiveProjectsForPicker().then(setProjects);
     return () => window.clearTimeout(id);
   }, [mounted]);
 
@@ -185,6 +218,44 @@ export function CommandPalette({
         run: () => actions.setView("settings"),
       },
       {
+        id: "export-ics",
+        kind: "action",
+        label: "Export calendar (.ics)",
+        keywords: "ical calendar export tasks due",
+        run: async () => {
+          const result = await exportTasksIcs();
+          if (!result) return;
+          if (result.count === 0) {
+            actions.onToast?.(
+              "No active tasks with due dates to export.",
+              "error",
+            );
+            return;
+          }
+          actions.onToast?.(
+            `Exported ${result.count} task(s) to calendar file.`,
+            "success",
+          );
+        },
+      },
+      {
+        id: "import-markdown",
+        kind: "action",
+        label: "Import notes from folder",
+        keywords: "markdown md import migration",
+        run: async () => {
+          const { imported, skipped } = await importNotesFromFolder();
+          if (imported === 0 && skipped === 0) return;
+          await emit("item:saved", {});
+          actions.onToast?.(
+            imported > 0
+              ? `Imported ${imported} note(s)${skipped > 0 ? ` · ${skipped} skipped` : ""}.`
+              : `No new files (${skipped} already imported).`,
+            imported > 0 ? "success" : "error",
+          );
+        },
+      },
+      {
         id: "focus-timer",
         kind: "action",
         label: "Start focus timer",
@@ -197,6 +268,32 @@ export function CommandPalette({
             await timer.startWithCurrentTask();
           } else {
             timer.openTaskPicker();
+          }
+        },
+      },
+      ...MEETING_TEMPLATES.map((t) => ({
+        id: `meeting-template-${t.id}`,
+        kind: "meeting" as const,
+        label: `New meeting: ${t.label}`,
+        keywords: `template meeting ${t.label} standup retro`,
+        run: () => actions.composeMeetingFromTemplate(t.id),
+      })),
+      {
+        id: "export-sqlite-backup",
+        kind: "backup",
+        label: "Export backup",
+        keywords: "sqlite database backup export data",
+        run: async () => {
+          try {
+            const path = await exportSqliteBackup();
+            if (path) {
+              actions.onToast?.("SQLite backup saved.", "success");
+            }
+          } catch (err) {
+            actions.onToast?.(
+              err instanceof Error ? err.message : "Export failed",
+              "error",
+            );
           }
         },
       },
@@ -234,8 +331,30 @@ export function CommandPalette({
         run: () => actions.openInboxWithSelection(item.id),
       }));
 
-    return [...cmds, ...itemCmds];
-  }, [staticCommands, items, query, actions]);
+    const projectCmds: PaletteCommand[] = (q ? projects : [])
+      .map((project) => ({
+        project,
+        score: fuzzyScore(q, `${project.content} project`),
+      }))
+      .filter((x) => x.score >= 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(({ project }) => {
+        const title =
+          project.content.length > 72
+            ? `${project.content.slice(0, 72)}…`
+            : project.content;
+        return {
+          id: `project-${project.id}`,
+          kind: "project" as const,
+          label: `Go to project: ${title}`,
+          hint: "project",
+          run: () => actions.focusProject(project.id),
+        };
+      });
+
+    return [...cmds, ...projectCmds, ...itemCmds];
+  }, [staticCommands, items, projects, query, actions]);
 
   useEffect(() => {
     setHighlight(0);
@@ -316,27 +435,36 @@ export function CommandPalette({
               No matches
             </li>
           )}
-          {filtered.map((cmd, index) => (
-            <li key={cmd.id}>
-              <button
-                type="button"
-                onMouseEnter={() => setHighlight(index)}
-                onClick={() => void runCommand(cmd)}
-                className={`flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm ${
-                  index === highlight
-                    ? "bg-pds-panel-2 text-pds-text"
-                    : "text-pds-muted hover:bg-pds-panel-2"
-                }`}
-              >
-                <span>{cmd.label}</span>
-                {cmd.hint && (
-                  <span className="shrink-0 text-[10px] uppercase text-pds-subtle">
-                    {cmd.hint}
-                  </span>
+          {filtered.map((cmd, index) => {
+            const prevKind = index > 0 ? filtered[index - 1]?.kind : null;
+            const showCategory = cmd.kind !== prevKind;
+            return (
+              <li key={cmd.id}>
+                {showCategory && (
+                  <p className="px-4 pb-1 pt-2 text-[10px] font-medium uppercase tracking-wide text-pds-subtle">
+                    {kindLabel(cmd.kind)}
+                  </p>
                 )}
-              </button>
-            </li>
-          ))}
+                <button
+                  type="button"
+                  onMouseEnter={() => setHighlight(index)}
+                  onClick={() => void runCommand(cmd)}
+                  className={`flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm ${
+                    index === highlight
+                      ? "bg-pds-panel-2 text-pds-text"
+                      : "text-pds-muted hover:bg-pds-panel-2"
+                  }`}
+                >
+                  <span>{cmd.label}</span>
+                  {(cmd.hint || cmd.kind !== "action") && (
+                    <span className="shrink-0 text-[10px] uppercase text-pds-subtle">
+                      {cmd.hint ?? kindLabel(cmd.kind)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
         <p className="border-t border-pds-border px-4 py-2 text-[10px] text-pds-subtle">
           ↑↓ navigate · Enter run · Esc close · Ctrl+K

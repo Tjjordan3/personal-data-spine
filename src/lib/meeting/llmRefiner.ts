@@ -1,3 +1,7 @@
+/**
+ * v7 LLM firewall: only Meeting Mode save/parse may call refineMeetingNotes.
+ * New call sites require a version note in V7.md / V8.md and SECURITY.md update.
+ */
 import type { ParsedAction } from "./types";
 import { parseMeetingNotes } from "./heuristicParser";
 

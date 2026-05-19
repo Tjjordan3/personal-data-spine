@@ -31,7 +31,9 @@ DonePath is a **local-first** desktop app. It does not provide cloud sync, accou
 - **Export** (Settings → Backup & data) writes `.db` or `.json` files you choose. Those files are full copies of your data — protect them like any sensitive backup.
 - **Restore** overwrites the live database with the file you select. Only restore files you trust.
 
-## Optional LLM refinement (Meetings)
+## Optional LLM refinement (Meetings only)
+
+**v7 product rule:** LLM is opt-in, local-by-default (Ollama), and limited to **Meeting Mode** note refinement. No inbox, Focus, project, or background AI calls.
 
 Disabled by default. When enabled in **Settings → LLM refinement**:
 

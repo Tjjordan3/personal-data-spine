@@ -103,6 +103,11 @@ export function RelatedPanel({
             onChanged();
             onSelectItem(updated.id);
           }}
+          onDuplicated={(copy) => {
+            onEditingChange(false);
+            onChanged();
+            onSelectItem(copy.id);
+          }}
           onCancel={() => onEditingChange(false)}
           onToast={onToast}
           onNavigateToFocus={onNavigateToFocus}

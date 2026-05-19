@@ -7,6 +7,11 @@ import {
   useState,
 } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import {
+  checkSubscriptionRenewalReminders,
+  registerRenewalNotificationActions,
+} from "./lib/subscriptions/renewalReminders";
 import { ItemList } from "./components/ItemList";
 import { FocusView } from "./components/FocusView";
 import { RelatedPanel } from "./components/RelatedPanel";
@@ -23,6 +28,7 @@ import {
 } from "./components/CommandPalette";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { NavViewIcon } from "./components/icons/NavIcon";
+import type { GraphScope } from "./lib/db/graph";
 import type { ItemType } from "./lib/db/types";
 import { getItemById, markItemsDone } from "./lib/db/items";
 import { searchWithFacets, type SearchResult } from "./lib/db/search";
@@ -77,6 +83,7 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [editing, setEditing] = useState(false);
   const [showGraph, setShowGraph] = useState(false);
+  const [graphScope, setGraphScope] = useState<GraphScope>("neighborhood");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{
@@ -87,8 +94,15 @@ export default function App() {
   const toastHideRef = useRef<number | null>(null);
   const toastExitRef = useRef<number | null>(null);
   const [subscriptionsAddOpen, setSubscriptionsAddOpen] = useState(false);
+  const [subscriptionsFocusId, setSubscriptionsFocusId] = useState<
+    string | null
+  >(null);
   const [projectsAddOpen, setProjectsAddOpen] = useState(false);
   const [projectsFocusId, setProjectsFocusId] = useState<string | null>(null);
+  const [meetingsComposeTemplateId, setMeetingsComposeTemplateId] = useState<
+    string | null
+  >(null);
+  const [meetingsFocusId, setMeetingsFocusId] = useState<string | null>(null);
   const [focusStatsTick, setFocusStatsTick] = useState(0);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [linkedToSelection, setLinkedToSelection] = useState(false);
@@ -167,6 +181,7 @@ export default function App() {
       setEditing(false);
       return;
     }
+    setGraphScope("neighborhood");
     void getItemById(selectedId).then(setSelectedItem);
   }, [selectedId]);
 
@@ -185,6 +200,42 @@ export default function App() {
     setFacets((prev) => ({ ...prev, type, status: "active" }));
     setView("inbox");
   }
+
+  const openSubscription = useCallback((id: string) => {
+    setSubscriptionsFocusId(id);
+    setView("subscriptions");
+  }, []);
+
+  useEffect(() => {
+    void checkSubscriptionRenewalReminders();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const interval = window.setInterval(() => {
+      void checkSubscriptionRenewalReminders();
+    }, dayMs);
+
+    let unlistenFocus: (() => void) | undefined;
+    void getCurrentWindow()
+      .onFocusChanged(({ payload: focused }) => {
+        if (focused) void checkSubscriptionRenewalReminders();
+      })
+      .then((fn) => {
+        unlistenFocus = fn;
+      })
+      .catch(() => undefined);
+
+    let actionListener: Awaited<
+      ReturnType<typeof registerRenewalNotificationActions>
+    >;
+    void registerRenewalNotificationActions(openSubscription).then((listener) => {
+      actionListener = listener;
+    });
+
+    return () => {
+      window.clearInterval(interval);
+      unlistenFocus?.();
+      void actionListener?.unregister();
+    };
+  }, [openSubscription]);
 
   useEffect(() => {
     const unlisten = listen("item:saved", () => {
@@ -328,8 +379,19 @@ export default function App() {
             if (kind === "project") {
               setProjectsFocusId(id);
               setView("projects");
+            } else if (kind === "subscription") {
+              openSubscription(id);
             } else {
               openInboxWithSelection(id);
+            }
+          }}
+          onOpenLinkedContext={(ctx) => {
+            if (ctx.view === "projects") {
+              setProjectsFocusId(ctx.id);
+              setView("projects");
+            } else {
+              setMeetingsFocusId(ctx.id);
+              setView("meeting");
             }
           }}
           onQuickCreate={(type) => {
@@ -423,6 +485,8 @@ export default function App() {
               >
                 <GraphView
                   focusId={selectedId}
+                  scope={graphScope}
+                  onScopeChange={setGraphScope}
                   onSelectItem={(id) => setSelectedId(id)}
                 />
               </Suspense>
@@ -471,6 +535,8 @@ export default function App() {
             onToast={showToast}
             initialShowAdd={subscriptionsAddOpen}
             onInitialShowAddConsumed={() => setSubscriptionsAddOpen(false)}
+            initialSelectedId={subscriptionsFocusId}
+            onInitialSelectedConsumed={() => setSubscriptionsFocusId(null)}
           />
         </Suspense>
       )}
@@ -480,6 +546,14 @@ export default function App() {
           <ProjectsView
             onToast={showToast}
             onNavigateToFocus={() => setView("focus")}
+            onNavigateToLinkedItem={(item) => {
+              if (item.type === "subscription") {
+                setSubscriptionsFocusId(item.id);
+                setView("subscriptions");
+              } else {
+                openInboxWithSelection(item.id);
+              }
+            }}
             initialShowAdd={projectsAddOpen}
             onInitialShowAddConsumed={() => setProjectsAddOpen(false)}
             initialSelectedId={projectsFocusId}
@@ -494,6 +568,12 @@ export default function App() {
             <MeetingsView
               onToast={showToast}
               onNavigateToFocus={() => setView("focus")}
+              initialComposeTemplateId={meetingsComposeTemplateId}
+              onInitialComposeTemplateConsumed={() =>
+                setMeetingsComposeTemplateId(null)
+              }
+              initialSelectedId={meetingsFocusId}
+              onInitialSelectedConsumed={() => setMeetingsFocusId(null)}
             />
           </Suspense>
         </main>
@@ -518,6 +598,15 @@ export default function App() {
           setView,
           openInboxQuickCreate,
           openInboxWithSelection,
+          focusProject: (projectId) => {
+            setProjectsFocusId(projectId);
+            setView("projects");
+          },
+          composeMeetingFromTemplate: (templateId) => {
+            setMeetingsComposeTemplateId(templateId);
+            setView("meeting");
+          },
+          onToast: showToast,
         }}
       />
     </div>

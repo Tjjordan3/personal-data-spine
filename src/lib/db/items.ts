@@ -1,6 +1,6 @@
 import { getDatabase } from "./database";
 import { deleteFtsRow, upsertFtsRow } from "./fts";
-import { deleteLinksForItem, linkMeetingTask } from "./links";
+import { createLink, deleteLinksForItem, getLinksForItem } from "./links";
 import type { ItemStatus } from "./itemStatus";
 import type { Item, ItemType, NewItem } from "./types";
 
@@ -181,6 +181,52 @@ export async function markItemsDone(ids: string[]): Promise<number> {
   return count;
 }
 
+/** Copy item with new id; resets status to active and created_at to now. */
+export async function duplicateItem(
+  sourceId: string,
+  options?: { copyLinks?: boolean },
+): Promise<Item> {
+  const source = await getItemById(sourceId);
+  if (!source) {
+    throw new Error("Item not found");
+  }
+  if (source.type === "work_block") {
+    throw new Error("Cannot duplicate work blocks");
+  }
+
+  const metadata = { ...source.metadata };
+  delete metadata.status;
+  delete metadata.marked_at;
+  delete metadata.outcome;
+
+  const copy = await insertItem({
+    type: source.type,
+    content: source.content,
+    tags: [...source.tags],
+    source: `duplicate:${source.id}`,
+    metadata,
+  });
+
+  if (options?.copyLinks) {
+    const links = await getLinksForItem(sourceId);
+    const neighbors = new Set<string>();
+    for (const link of links) {
+      const other = link.from_id === sourceId ? link.to_id : link.from_id;
+      if (other !== copy.id) neighbors.add(other);
+    }
+    for (const neighborId of neighbors) {
+      try {
+        await createLink(copy.id, neighborId, "related");
+        await createLink(neighborId, copy.id, "related");
+      } catch {
+        /* link may exist */
+      }
+    }
+  }
+
+  return copy;
+}
+
 export async function listItems(options?: {
   type?: ItemType;
   tag?: string;
@@ -320,11 +366,6 @@ export async function saveMeetingWithTasks(
         project_id: task.project_id?.trim() || null,
       },
     });
-    try {
-      await linkMeetingTask(meetingId, saved.id);
-    } catch (linkError) {
-      console.warn("Could not create item_links row:", linkError);
-    }
     savedTasks.push(saved);
   }
 

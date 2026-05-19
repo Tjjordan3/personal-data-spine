@@ -61,7 +61,12 @@ function dedupeUndirectedEdges(edges: GraphEdge[]): GraphEdge[] {
   return Array.from(map.values());
 }
 
-export async function getGraphData(focusId?: string | null): Promise<GraphData> {
+export type GraphScope = "full" | "neighborhood";
+
+export async function getGraphData(
+  focusId?: string | null,
+  scope: GraphScope = "neighborhood",
+): Promise<GraphData> {
   const db = await getDatabase();
   const linkRows = await db.select<LinkRow[]>(
     `SELECT from_id, to_id, link_type FROM item_links ORDER BY created_at DESC LIMIT 500`,
@@ -80,7 +85,11 @@ export async function getGraphData(focusId?: string | null): Promise<GraphData> 
   const adj = buildAdjacency(allEdges);
 
   let visibleIds: Set<string>;
-  if (focusId && adj.has(focusId)) {
+  if (
+    scope === "neighborhood" &&
+    focusId &&
+    adj.has(focusId)
+  ) {
     visibleIds = reachableFrom(focusId, adj);
   } else {
     visibleIds = new Set(adj.keys());

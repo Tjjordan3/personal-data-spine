@@ -9,11 +9,13 @@
 - **v3 snapshot (frozen):** `../personal-data-spine-v3/` and [V3.md](V3.md)
 - **v4 snapshot (frozen):** `../personal-data-spine-v4/` and [V4.md](V4.md)
 - **v5 snapshot (frozen):** `../personal-data-spine-v5/` and [V5.md](V5.md)
-- **v6 scope (active):** [V6.md](V6.md)
+- **v6 snapshot (frozen):** `../personal-data-spine-v6/` and [V6.md](V6.md)
+- **v7 scope (active):** [V7.md](V7.md) on branch `v7`
 
 ## v6 updates (current)
 
 - **Projects hub** — 3-column layout (list, detail, linked tasks) aligned with Meetings
+- **Subscriptions hub** — same 3-column pattern; renewal detail in center; Windows renewal toasts (Settings toggle, 7-day window)
 - **UI identity** — IBM Plex Sans, type scale, nav icons, milestone app icon, consistent emerald accents
 - **Graph view** — larger viewport, type icons on nodes, labels on focus/hover, optional “Show labels”
 - **Windows installer** — pre-built setup on [GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases) (`DonePath_*_x64-setup.exe`); see [RELEASING.md](RELEASING.md)

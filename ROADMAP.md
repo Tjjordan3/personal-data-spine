@@ -30,6 +30,7 @@ Local-first Tauri/React/SQLite app. Philosophy: **leverage** (fewer taps, action
 - Task row actions: Start, Done, Snooze, Reschedule, Log outcome
 - `metadata.snoozed_until` hides tasks until date
 - **Start focus** — highest-urgency task in stream
+- **Daily flow (v6):** Snooze/reschedule on Meetings & Projects linked tasks; palette → project, meeting template, export backup; optional post-meeting-save actions
 
 ## M3 — Meetings leverage
 
@@ -61,6 +62,14 @@ Local-first Tauri/React/SQLite app. Philosophy: **leverage** (fewer taps, action
 - `index.html`: themed splash + `pds-settings` sync before JS bundle
 - Code-split heavy routes (Subscriptions, Projects, Meetings, Settings, Graph)
 
+## Power user / depth (v6)
+
+- ICS export for tasks with due dates (file only, no OAuth)
+- Inbox graph: full vs selection neighborhood
+- Duplicate item (+ optional links); meeting user templates / duplicate last
+- Recurring tasks & subscriptions in metadata + Focus stream
+- Import notes from a Markdown folder (`#imported`, path dedupe)
+
 ## Later
 
-See [V5.md](V5.md) optional items (subscription reminders, mobile, etc.).
+See [V5.md](V5.md) optional items (mobile, etc.). Subscription renewal toasts shipped in v6 ([V6.md](V6.md)).

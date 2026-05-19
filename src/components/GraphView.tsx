@@ -4,6 +4,7 @@ import {
   getGraphData,
   pickDefaultFocusId,
   type GraphEdge,
+  type GraphScope,
 } from "../lib/db/graph";
 import { linkTypeLabel } from "../lib/db/links";
 import type { Item, ItemType } from "../lib/db/types";
@@ -16,6 +17,8 @@ import {
 
 interface GraphViewProps {
   focusId: string | null;
+  scope: GraphScope;
+  onScopeChange: (scope: GraphScope) => void;
   onSelectItem: (id: string) => void;
 }
 
@@ -216,7 +219,12 @@ function nodeTooltip(item: Item): string {
   return `${GRAPH_TYPE_LABELS[item.type]}: ${preview(item.content, 80)}`;
 }
 
-export function GraphView({ focusId, onSelectItem }: GraphViewProps) {
+export function GraphView({
+  focusId,
+  scope,
+  onScopeChange,
+  onSelectItem,
+}: GraphViewProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ width: 960, height: 520 });
   const [nodes, setNodes] = useState<Item[]>([]);
@@ -227,13 +235,13 @@ export function GraphView({ focusId, onSelectItem }: GraphViewProps) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getGraphData(focusId);
+      const data = await getGraphData(focusId, scope);
       setNodes(data.nodes);
       setEdges(data.edges);
     } finally {
       setLoading(false);
     }
-  }, [focusId]);
+  }, [focusId, scope]);
 
   useEffect(() => {
     void load();
@@ -318,10 +326,44 @@ export function GraphView({ focusId, onSelectItem }: GraphViewProps) {
     <div className={`${GRAPH_CHROME} p-3`}>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-pds-sm text-pds-muted">
-          {effectiveFocus
-            ? `Neighborhood of selected item · ${nodes.length} node(s)`
-            : "Link graph · click a node to focus"}
+          {scope === "neighborhood" && effectiveFocus
+            ? `Selection neighborhood · ${nodes.length} node(s)`
+            : `Full graph · ${nodes.length} node(s)`}
         </p>
+        <div
+          role="group"
+          aria-label="Graph scope"
+          className="flex items-center gap-1 rounded border border-pds-border p-0.5 text-pds-caption"
+        >
+          <button
+            type="button"
+            disabled={!focusId}
+            onClick={() => onScopeChange("neighborhood")}
+            className={`rounded px-2 py-0.5 ${
+              scope === "neighborhood"
+                ? "pds-chip-active"
+                : "text-pds-muted hover:text-pds-text disabled:opacity-40"
+            }`}
+            title={
+              focusId
+                ? "Show linked neighborhood of selected item"
+                : "Select an item to filter"
+            }
+          >
+            Neighborhood
+          </button>
+          <button
+            type="button"
+            onClick={() => onScopeChange("full")}
+            className={`rounded px-2 py-0.5 ${
+              scope === "full"
+                ? "pds-chip-active"
+                : "text-pds-muted hover:text-pds-text"
+            }`}
+          >
+            Full graph
+          </button>
+        </div>
         <label className="inline-flex cursor-pointer items-center gap-1.5 text-pds-caption text-pds-muted">
           <input
             type="checkbox"

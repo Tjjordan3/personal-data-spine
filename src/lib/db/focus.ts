@@ -1,6 +1,14 @@
-import { listItems } from "./items";
+import { getItemById, listItems } from "./items";
+import { meetingTitle } from "../meeting/display";
 import { loadFocusTimerStats } from "./workBlocks";
 import { addDaysToKey, daysBetweenKeys, todayKey, toDateKey } from "./dates";
+import {
+  formatRecurrenceInterval,
+  nextOccurrenceOnOrAfter,
+  parseRecurrence,
+  resolveRecurrenceAnchor,
+  type ItemRecurrence,
+} from "../recurrence";
 import {
   formatProjectStatusLabel,
   getProjectActivityIso,
@@ -18,12 +26,24 @@ export type FocusUrgency =
   | "soon"
   | "active";
 
+export type FocusLinkedView = "projects" | "meetings";
+
+export interface FocusLinkedContext {
+  label: string;
+  view: FocusLinkedView;
+  id: string;
+}
+
 export interface FocusEntry {
   item: Item;
   kind: FocusKind;
   urgency: FocusUrgency;
   sortKey: number;
   detail: string;
+  /** Next recurrence occurrence (not a duplicate row for static due_date). */
+  isRecurrenceLine?: boolean;
+  /** Project and/or meeting context for tasks (v7 spine). */
+  linkedContexts?: FocusLinkedContext[];
 }
 
 export interface FocusSummary {
@@ -79,6 +99,26 @@ function taskDueDetail(item: Item, urgency: FocusUrgency): string {
   if (urgency === "today") return "Due today";
   if (urgency === "soon") return `Due ${key}`;
   return "Task";
+}
+
+function recurringDetail(
+  kind: "task" | "subscription",
+  recurrence: ItemRecurrence,
+  nextKey: string,
+  urgency: FocusUrgency,
+): string {
+  const interval = formatRecurrenceInterval(recurrence.interval);
+  const prefix = kind === "task" ? "Recurring task" : "Recurring renewal";
+  if (urgency === "overdue") {
+    return `${prefix} (${interval}) · overdue · next ${nextKey}`;
+  }
+  if (urgency === "today") {
+    return `${prefix} (${interval}) · due today`;
+  }
+  if (urgency === "soon") {
+    return `${prefix} (${interval}) · next ${nextKey}`;
+  }
+  return `${prefix} (${interval})`;
 }
 
 function subscriptionDetail(item: Item, urgency: FocusUrgency): string {
@@ -139,6 +179,60 @@ function projectSortDate(item: Item): string {
   return getProjectActivityIso(item);
 }
 
+function projectContextLabel(project: Item): string {
+  const flat = project.content.replace(/\s+/g, " ").trim();
+  return flat.length > 48 ? `${flat.slice(0, 48)}…` : flat || "Project";
+}
+
+async function loadTaskLinkedContextMap(
+  tasks: Item[],
+): Promise<Map<string, FocusLinkedContext[]>> {
+  const projectIds = new Set<string>();
+  const meetingIds = new Set<string>();
+  for (const task of tasks) {
+    const pid = (task.metadata.project_id as string | undefined)?.trim();
+    const mid = (task.metadata.meeting_id as string | undefined)?.trim();
+    if (pid) projectIds.add(pid);
+    if (mid) meetingIds.add(mid);
+  }
+
+  const projectById = new Map<string, Item>();
+  const meetingById = new Map<string, Item>();
+  await Promise.all([
+    ...[...projectIds].map(async (id) => {
+      const p = await getItemById(id);
+      if (p) projectById.set(id, p);
+    }),
+    ...[...meetingIds].map(async (id) => {
+      const m = await getItemById(id);
+      if (m) meetingById.set(id, m);
+    }),
+  ]);
+
+  const map = new Map<string, FocusLinkedContext[]>();
+  for (const task of tasks) {
+    const contexts: FocusLinkedContext[] = [];
+    const pid = (task.metadata.project_id as string | undefined)?.trim();
+    if (pid && projectById.has(pid)) {
+      contexts.push({
+        label: projectContextLabel(projectById.get(pid)!),
+        view: "projects",
+        id: pid,
+      });
+    }
+    const mid = (task.metadata.meeting_id as string | undefined)?.trim();
+    if (mid && meetingById.has(mid)) {
+      contexts.push({
+        label: meetingTitle(meetingById.get(mid)!),
+        view: "meetings",
+        id: mid,
+      });
+    }
+    if (contexts.length > 0) map.set(task.id, contexts);
+  }
+  return map;
+}
+
 export async function loadFocusStream(): Promise<{
   entries: FocusEntry[];
   summary: FocusSummary;
@@ -157,6 +251,7 @@ export async function loadFocusStream(): Promise<{
   const rollups = await getProjectRollupsMap(
     eligibleProjects.map((p) => p.id),
   );
+  const taskLinkedContexts = await loadTaskLinkedContextMap(tasks);
 
   const entries: FocusEntry[] = [];
   let tasksDue = 0;
@@ -167,10 +262,40 @@ export async function loadFocusStream(): Promise<{
   for (const item of tasks) {
     if (isTaskSnoozed(item, today)) continue;
     const due = item.metadata.due_date as string | undefined;
-    if (!due) continue;
-    const key = toDateKey(due);
-    if (!key || key > soonLimit) continue;
-    const urgency = classifyDateKey(key, today);
+    let dueShown = false;
+    if (due) {
+      const key = toDateKey(due);
+      if (key && key <= soonLimit) {
+        const urgency = classifyDateKey(key, today);
+        if (urgency) {
+          tasksDue += 1;
+          dueShown = true;
+          entries.push({
+            item,
+            kind: "task",
+            urgency,
+            sortKey: urgencySort(urgency),
+            detail: taskDueDetail(item, urgency),
+            linkedContexts: taskLinkedContexts.get(item.id),
+          });
+        }
+      }
+    }
+
+    const recurrence = parseRecurrence(item.metadata);
+    if (!recurrence) continue;
+    const anchor = resolveRecurrenceAnchor(
+      recurrence,
+      item.metadata,
+      item.created_at,
+    );
+    const nextKey = nextOccurrenceOnOrAfter(anchor, recurrence.interval, today);
+    if (!nextKey || nextKey > soonLimit) continue;
+    if (dueShown && due) {
+      const dueKey = toDateKey(due);
+      if (dueKey === nextKey) continue;
+    }
+    const urgency = classifyDateKey(nextKey, today);
     if (!urgency) continue;
     tasksDue += 1;
     entries.push({
@@ -178,16 +303,47 @@ export async function loadFocusStream(): Promise<{
       kind: "task",
       urgency,
       sortKey: urgencySort(urgency),
-      detail: taskDueDetail(item, urgency),
+      detail: recurringDetail("task", recurrence, nextKey, urgency),
+      isRecurrenceLine: true,
+      linkedContexts: taskLinkedContexts.get(item.id),
     });
   }
 
   for (const item of subscriptions) {
     const renewal = item.metadata.renewal_date as string | undefined;
-    if (!renewal) continue;
-    const key = toDateKey(renewal);
-    if (!key || key > soonLimit) continue;
-    const urgency = classifyDateKey(key, today);
+    let renewalShown = false;
+    if (renewal) {
+      const key = toDateKey(renewal);
+      if (key && key <= soonLimit) {
+        const urgency = classifyDateKey(key, today);
+        if (urgency) {
+          subscriptionsRenewing += 1;
+          renewalShown = true;
+          entries.push({
+            item,
+            kind: "subscription",
+            urgency,
+            sortKey: urgencySort(urgency),
+            detail: subscriptionDetail(item, urgency),
+          });
+        }
+      }
+    }
+
+    const recurrence = parseRecurrence(item.metadata);
+    if (!recurrence) continue;
+    const anchor = resolveRecurrenceAnchor(
+      recurrence,
+      item.metadata,
+      item.created_at,
+    );
+    const nextKey = nextOccurrenceOnOrAfter(anchor, recurrence.interval, today);
+    if (!nextKey || nextKey > soonLimit) continue;
+    if (renewalShown && renewal) {
+      const renewalKey = toDateKey(renewal);
+      if (renewalKey === nextKey) continue;
+    }
+    const urgency = classifyDateKey(nextKey, today);
     if (!urgency) continue;
     subscriptionsRenewing += 1;
     entries.push({
@@ -195,7 +351,8 @@ export async function loadFocusStream(): Promise<{
       kind: "subscription",
       urgency,
       sortKey: urgencySort(urgency),
-      detail: subscriptionDetail(item, urgency),
+      detail: recurringDetail("subscription", recurrence, nextKey, urgency),
+      isRecurrenceLine: true,
     });
   }
 
@@ -283,7 +440,9 @@ export function formatFocusSummary(summary: FocusSummary): string {
 
 /** Top task for Focus “Start focus” — overdue/today first, then soon. */
 export function pickNextFocusTask(entries: FocusEntry[]): FocusEntry | null {
-  const tasks = entries.filter((e) => e.kind === "task");
-  if (tasks.length === 0) return null;
+  const tasks = entries.filter((e) => e.kind === "task" && !e.isRecurrenceLine);
+  if (tasks.length === 0) {
+    return entries.find((e) => e.kind === "task") ?? null;
+  }
   return tasks[0];
 }

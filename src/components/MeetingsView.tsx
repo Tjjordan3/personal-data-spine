@@ -10,15 +10,26 @@ import {
 import { getItemStatus, type ItemStatus } from "../lib/db/itemStatus";
 import { todayKey } from "../lib/db/dates";
 import { meetingBodyPreview, meetingTitle } from "../lib/meeting/display";
+import {
+  meetingBodyAsTemplate,
+  saveUserMeetingTemplate,
+} from "../lib/meeting/userTemplates";
 import type { Item } from "../lib/db/types";
 import { EmptyState } from "./EmptyState";
 import { ItemEditForm } from "./ItemEditForm";
 import { MeetingMode } from "./MeetingMode";
+import { MeetingPostSavePrompt } from "./MeetingPostSavePrompt";
 import { TaskFocusStartButton } from "./TaskFocusStartButton";
+import { TaskScheduleActions } from "./TaskScheduleActions";
+import type { MeetingSaveResult } from "./MeetingMode";
 
 interface MeetingsViewProps {
   onToast: (message: string, kind: "success" | "error") => void;
   onNavigateToFocus?: () => void;
+  initialComposeTemplateId?: string | null;
+  onInitialComposeTemplateConsumed?: () => void;
+  initialSelectedId?: string | null;
+  onInitialSelectedConsumed?: () => void;
 }
 
 function formatTime(iso: string): string {
@@ -44,6 +55,10 @@ function isTaskOverdue(task: Item): boolean {
 export function MeetingsView({
   onToast,
   onNavigateToFocus,
+  initialComposeTemplateId = null,
+  onInitialComposeTemplateConsumed,
+  initialSelectedId = null,
+  onInitialSelectedConsumed,
 }: MeetingsViewProps) {
   const [meetings, setMeetings] = useState<Item[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,6 +71,17 @@ export function MeetingsView({
   const [taskBusyId, setTaskBusyId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Item | null>(null);
+  const [postSave, setPostSave] = useState<{
+    meeting: Item;
+    tasks: Item[];
+  } | null>(null);
+  const [composeTemplateId, setComposeTemplateId] = useState<string | null>(
+    initialComposeTemplateId,
+  );
+  const [composeDuplicateFrom, setComposeDuplicateFrom] = useState<{
+    content: string;
+    title?: string | null;
+  } | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -121,9 +147,35 @@ export function MeetingsView({
     };
   }, [refresh]);
 
-  function handleSaved(meetingId: string) {
-    setSelectedId(meetingId);
+  useEffect(() => {
+    if (!initialComposeTemplateId) return;
+    setComposeTemplateId(initialComposeTemplateId);
+    setSelectedId(null);
+    setSelectedItem(null);
+    setLinkedTasks([]);
     setEditing(false);
+    setPostSave(null);
+    setComposeKey((k) => k + 1);
+    onInitialComposeTemplateConsumed?.();
+  }, [
+    initialComposeTemplateId,
+    onInitialComposeTemplateConsumed,
+  ]);
+
+  useEffect(() => {
+    if (!initialSelectedId) return;
+    setSelectedId(initialSelectedId);
+    setEditing(false);
+    setPostSave(null);
+    onInitialSelectedConsumed?.();
+  }, [initialSelectedId, onInitialSelectedConsumed]);
+
+  function handleSaved(result: MeetingSaveResult) {
+    setSelectedId(result.meetingId);
+    setEditing(false);
+    void getItemById(result.meetingId).then((meeting) => {
+      if (meeting) setPostSave({ meeting, tasks: result.tasks });
+    });
     void refresh();
   }
 
@@ -134,7 +186,47 @@ export function MeetingsView({
     setEditing(false);
     setSelectedTaskId(null);
     setSelectedTask(null);
+    setPostSave(null);
+    setComposeTemplateId(null);
+    setComposeDuplicateFrom(null);
     setComposeKey((k) => k + 1);
+  }
+
+  function duplicateLastMeeting() {
+    const last = meetings[0];
+    if (!last) {
+      onToast("No saved meetings to duplicate.", "error");
+      return;
+    }
+    setComposeDuplicateFrom({
+      content: last.content,
+      title: (last.metadata.title as string | undefined) ?? null,
+    });
+    setComposeTemplateId(null);
+    startNewMeeting();
+    onToast("Loaded last meeting structure.", "success");
+  }
+
+  function saveMeetingAsTemplate(meeting: Item) {
+    const template = meetingBodyAsTemplate(
+      meeting.content,
+      (meeting.metadata.title as string | undefined) ?? null,
+    );
+    saveUserMeetingTemplate(template);
+    onToast(`Saved template “${template.label}”.`, "success");
+  }
+
+  function useMeetingAsCompose(meeting: Item) {
+    setComposeDuplicateFrom({
+      content: meeting.content,
+      title: (meeting.metadata.title as string | undefined) ?? null,
+    });
+    setSelectedId(null);
+    setSelectedItem(null);
+    setLinkedTasks([]);
+    setEditing(false);
+    setComposeKey((k) => k + 1);
+    onToast("Meeting loaded for a new note.", "success");
   }
 
   function clearTaskSelection() {
@@ -222,6 +314,15 @@ export function MeetingsView({
                 >
                   New meeting
                 </button>
+                {meetings.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={duplicateLastMeeting}
+                    className="rounded border border-pds-border px-3 py-1.5 text-pds-sm text-pds-text"
+                  >
+                    Duplicate last meeting
+                  </button>
+                )}
               </EmptyState>
             </li>
           )}
@@ -238,6 +339,7 @@ export function MeetingsView({
                   type="button"
                   onClick={() => {
                     setEditing(false);
+                    setPostSave(null);
                     setSelectedId(item.id);
                   }}
                   className={`w-full px-2 py-2 text-left text-pds-sm transition ${
@@ -272,6 +374,8 @@ export function MeetingsView({
         {selectedId == null ? (
           <MeetingMode
             key={composeKey}
+            initialTemplateId={composeTemplateId}
+            duplicateFrom={composeDuplicateFrom}
             onSaved={handleSaved}
             onError={(msg) => onToast(msg, "error")}
             onSuccess={(msg) => onToast(msg, "success")}
@@ -292,6 +396,16 @@ export function MeetingsView({
           />
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
+            {postSave && (
+              <MeetingPostSavePrompt
+                meeting={postSave.meeting}
+                tasks={postSave.tasks}
+                onDismiss={() => setPostSave(null)}
+                onToast={onToast}
+                onNavigateToFocus={onNavigateToFocus}
+                onTasksChanged={() => void refresh()}
+              />
+            )}
             <div className="border-b border-pds-border px-4 py-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -306,13 +420,29 @@ export function MeetingsView({
                       ` · ${getItemStatus(selectedItem)}`}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  className="shrink-0 rounded border border-pds-border px-3 py-1 text-pds-sm text-pds-muted hover:bg-pds-chip"
-                >
-                  Edit
-                </button>
+                <div className="flex shrink-0 flex-wrap gap-1">
+                  <button
+                    type="button"
+                    onClick={() => useMeetingAsCompose(selectedItem)}
+                    className="rounded border border-pds-border px-2 py-1 text-pds-sm text-pds-muted hover:bg-pds-chip"
+                  >
+                    Duplicate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => saveMeetingAsTemplate(selectedItem)}
+                    className="rounded border border-pds-border px-2 py-1 text-pds-sm text-pds-muted hover:bg-pds-chip"
+                  >
+                    Save template
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="rounded border border-pds-border px-3 py-1 text-pds-sm text-pds-muted hover:bg-pds-chip"
+                  >
+                    Edit
+                  </button>
+                </div>
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-auto p-4">
@@ -423,6 +553,13 @@ export function MeetingsView({
                         onNavigateToFocus={onNavigateToFocus}
                         className="pds-btn-primary-muted px-2 py-0.5 text-pds-caption"
                       />
+                      {status === "active" && (
+                        <TaskScheduleActions
+                          task={task}
+                          onChanged={() => void refresh()}
+                          onToast={onToast}
+                        />
+                      )}
                     </div>
                   </div>
                 </li>

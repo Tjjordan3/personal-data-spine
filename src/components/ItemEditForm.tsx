@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { emit } from "@tauri-apps/api/event";
-import { listItems, updateItem } from "../lib/db/items";
-import { linkMeetingTask } from "../lib/db/links";
+import { duplicateItem, listItems, updateItem } from "../lib/db/items";
+import {
+  parseRecurrence,
+  RECURRENCE_INTERVAL_OPTIONS,
+  recurrenceToMetadata,
+  type RecurrenceInterval,
+} from "../lib/recurrence";
 import {
   listActiveProjectsForPicker,
   PROJECT_AREA_PRESETS,
@@ -10,6 +15,7 @@ import {
 } from "../lib/db/projects";
 import { detectTags } from "../lib/tags/keywordTagger";
 import type { Item, ProjectPriority, ProjectStatus } from "../lib/db/types";
+import { TagAddField } from "./TagAddField";
 import { TaskFocusStartButton } from "./TaskFocusStartButton";
 
 interface ItemEditFormProps {
@@ -18,19 +24,11 @@ interface ItemEditFormProps {
   onCancel: () => void;
   onToast: (message: string, kind: "success" | "error") => void;
   onNavigateToFocus?: () => void;
+  onDuplicated?: (item: Item) => void;
 }
 
-function tagsToString(tags: string[]): string {
-  return tags.join(", ");
-}
-
-function parseTagsInput(raw: string, content: string): string[] {
-  const fromInput = raw
-    .split(/[,\s]+/)
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .map((t) => (t.startsWith("#") ? t.toLowerCase() : `#${t.toLowerCase()}`));
-  return [...new Set([...fromInput, ...detectTags(content)])].slice(0, 8);
+function mergeTagsForSave(tags: string[], content: string): string[] {
+  return [...new Set([...tags, ...detectTags(content)])].slice(0, 8);
 }
 
 export function ItemEditForm({
@@ -39,12 +37,13 @@ export function ItemEditForm({
   onCancel,
   onToast,
   onNavigateToFocus,
+  onDuplicated,
 }: ItemEditFormProps) {
   const [content, setContent] = useState(item.content);
   const [meetingTitle, setMeetingTitle] = useState(
     (item.metadata.title as string | undefined) ?? "",
   );
-  const [tagsInput, setTagsInput] = useState(tagsToString(item.tags));
+  const [tags, setTags] = useState<string[]>(item.tags);
   const [owner, setOwner] = useState(
     (item.metadata.owner as string | undefined) ?? "",
   );
@@ -90,11 +89,19 @@ export function ItemEditForm({
   const [meetings, setMeetings] = useState<Item[]>([]);
   const [projects, setProjects] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
+  const initialRecurrence = parseRecurrence(item.metadata);
+  const [recurrenceInterval, setRecurrenceInterval] = useState<
+    RecurrenceInterval | ""
+  >(initialRecurrence?.interval ?? "");
+  const [recurrenceAnchor, setRecurrenceAnchor] = useState(
+    initialRecurrence?.anchor_date ?? "",
+  );
 
   useEffect(() => {
     setContent(item.content);
     setMeetingTitle((item.metadata.title as string | undefined) ?? "");
-    setTagsInput(tagsToString(item.tags));
+    setTags(item.tags);
     setOwner((item.metadata.owner as string | undefined) ?? "");
     setDueDate((item.metadata.due_date as string | undefined) ?? "");
     setMeetingId((item.metadata.meeting_id as string | undefined) ?? "");
@@ -115,6 +122,9 @@ export function ItemEditForm({
     );
     setProjectStartedAt((item.metadata.started_at as string | undefined) ?? "");
     setProjectId((item.metadata.project_id as string | undefined) ?? "");
+    const rec = parseRecurrence(item.metadata);
+    setRecurrenceInterval(rec?.interval ?? "");
+    setRecurrenceAnchor(rec?.anchor_date ?? "");
   }, [item]);
 
   useEffect(() => {
@@ -135,7 +145,7 @@ export function ItemEditForm({
 
     setSaving(true);
     try {
-      const tags = parseTagsInput(tagsInput, trimmed);
+      const mergedTags = mergeTagsForSave(tags, trimmed);
       const metadata: Record<string, unknown> = { ...item.metadata };
 
       if (item.type === "task") {
@@ -144,12 +154,30 @@ export function ItemEditForm({
         metadata.due_date = dueDate.trim() || null;
         metadata.meeting_id = linked;
         metadata.project_id = projectId.trim() || null;
+        if (recurrenceInterval) {
+          Object.assign(
+            metadata,
+            recurrenceToMetadata(recurrenceInterval, recurrenceAnchor),
+          );
+        } else {
+          delete metadata.recurrence;
+          delete metadata.recurrence_rule;
+        }
       }
       if (item.type === "subscription") {
         metadata.renewal_date = renewalDate.trim() || null;
         metadata.amount = amount.trim() || null;
         metadata.cadence = cadence.trim() || null;
         metadata.notes = subscriptionNotes.trim() || null;
+        if (recurrenceInterval) {
+          Object.assign(
+            metadata,
+            recurrenceToMetadata(recurrenceInterval, recurrenceAnchor),
+          );
+        } else {
+          delete metadata.recurrence;
+          delete metadata.recurrence_rule;
+        }
       }
       if (item.type === "project") {
         metadata.status = projectStatus || "active";
@@ -165,17 +193,9 @@ export function ItemEditForm({
 
       const updated = await updateItem(item.id, {
         content: trimmed,
-        tags,
+        tags: mergedTags,
         metadata,
       });
-
-      if (item.type === "task" && meetingId.trim()) {
-        try {
-          await linkMeetingTask(meetingId.trim(), item.id);
-        } catch {
-          /* link may already exist */
-        }
-      }
 
       await emit("item:saved", {});
       onSaved(updated);
@@ -186,6 +206,23 @@ export function ItemEditForm({
       onToast(message || "Failed to save changes", "error");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDuplicate(copyLinks: boolean) {
+    setDuplicating(true);
+    try {
+      const copy = await duplicateItem(item.id, { copyLinks });
+      await emit("item:saved", {});
+      onToast("Item duplicated.", "success");
+      onDuplicated?.(copy);
+    } catch (err) {
+      onToast(
+        err instanceof Error ? err.message : "Duplicate failed",
+        "error",
+      );
+    } finally {
+      setDuplicating(false);
     }
   }
 
@@ -277,16 +314,51 @@ export function ItemEditForm({
         </label>
       )}
 
-      <label className="block text-[11px] text-pds-muted">
-        Tags (comma-separated)
-        <input
-          value={tagsInput}
-          onChange={(e) => setTagsInput(e.target.value)}
+      <div className="block text-[11px] text-pds-muted">
+        Tags
+        <TagAddField
+          className="mt-1"
+          tags={tags}
+          onChange={setTags}
           disabled={saving}
-          placeholder="#urgent, #work"
-          className="mt-1 w-full rounded border border-pds-border bg-pds-input px-2 py-1.5 text-sm text-pds-text focus:border-pds-muted focus:outline-none"
         />
-      </label>
+      </div>
+
+      {(item.type === "task" || item.type === "subscription") && (
+        <>
+          <label className="block text-[11px] text-pds-muted">
+            Recurrence
+            <select
+              value={recurrenceInterval}
+              onChange={(e) =>
+                setRecurrenceInterval(
+                  e.target.value as RecurrenceInterval | "",
+                )
+              }
+              disabled={saving}
+              className="mt-1 w-full rounded border border-pds-border bg-pds-input px-2 py-1.5 text-sm text-pds-text"
+            >
+              {RECURRENCE_INTERVAL_OPTIONS.map((o) => (
+                <option key={o.label} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {recurrenceInterval && (
+            <label className="block text-[11px] text-pds-muted">
+              Recurrence anchor (optional)
+              <input
+                type="date"
+                value={recurrenceAnchor}
+                onChange={(e) => setRecurrenceAnchor(e.target.value)}
+                disabled={saving}
+                className="mt-1 w-full rounded border border-pds-border bg-pds-input px-2 py-1.5 text-sm text-pds-text"
+              />
+            </label>
+          )}
+        </>
+      )}
 
       {item.type === "subscription" && (
         <>
@@ -459,10 +531,10 @@ export function ItemEditForm({
         </>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || duplicating}
           className="pds-btn-primary flex-1 py-1.5 text-xs disabled:opacity-40"
         >
           {saving ? "Saving…" : "Save"}
@@ -470,12 +542,32 @@ export function ItemEditForm({
         <button
           type="button"
           onClick={onCancel}
-          disabled={saving}
+          disabled={saving || duplicating}
           className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted"
         >
           Cancel
         </button>
       </div>
+      {item.type !== "work_block" && (
+        <div className="flex flex-wrap gap-2 border-t border-pds-border pt-2">
+          <button
+            type="button"
+            disabled={saving || duplicating}
+            onClick={() => void handleDuplicate(false)}
+            className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted disabled:opacity-40"
+          >
+            {duplicating ? "Duplicating…" : "Duplicate"}
+          </button>
+          <button
+            type="button"
+            disabled={saving || duplicating}
+            onClick={() => void handleDuplicate(true)}
+            className="rounded border border-pds-border px-3 py-1.5 text-xs text-pds-muted disabled:opacity-40"
+          >
+            Duplicate + links
+          </button>
+        </div>
+      )}
     </form>
   );
 }

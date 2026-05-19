@@ -67,6 +67,17 @@ Unsigned builds may trigger Windows SmartScreen; users can choose **More info �
 
 `package-lock.json` must be committed and in sync with `package.json` (CI runs `npm ci`). If a tagged release fails, fix the workflow or lockfile on `v6`, push, then re-push the tag (see below) or run **Actions → Release → Run workflow**.
 
+### Changelog on the Releases page
+
+When a `v*` tag is pushed, the **Release** workflow builds `release_body.md` before publishing:
+
+1. **Preferred:** `gh release generate-notes` (GitHub’s auto-generated notes from merged PRs/commits since the previous tag).
+2. **Fallback:** `git log <previous-tag>..HEAD` as a bullet list of commit subjects.
+
+That file is passed to `tauri-action` as `releaseBodyPath`, so the GitHub Release description includes install instructions plus a **Release notes** or **Changes since …** section. You can still edit the release text on GitHub after publish.
+
+Day-to-day PR validation uses **CI** (`.github/workflows/ci.yml`): `npm run build` and `npm test` on Ubuntu — no Tauri/Rust on every PR.
+
 ## Publish manually (one-off)
 
 1. Run `npm run tauri build` locally.

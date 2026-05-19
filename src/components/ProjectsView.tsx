@@ -10,24 +10,20 @@ import {
   getProjectRollupsMap,
   getTasksForProject,
   listProjects,
-  PROJECT_AREA_PRESETS,
-  PROJECT_PRIORITY_OPTIONS,
-  PROJECT_STATUS_OPTIONS,
 } from "../lib/db/projects";
-import type {
-  Item,
-  ProjectMetadata,
-  ProjectPriority,
-  ProjectStatus,
-} from "../lib/db/types";
+import type { Item, ProjectMetadata } from "../lib/db/types";
 import { detectTags } from "../lib/tags/keywordTagger";
 import { EmptyState } from "./EmptyState";
 import { ItemEditForm } from "./ItemEditForm";
+import { ProjectComposeMode } from "./ProjectComposeMode";
+import { ProjectRelatedSection } from "./ProjectRelatedSection";
 import { TaskFocusStartButton } from "./TaskFocusStartButton";
+import { TaskScheduleActions } from "./TaskScheduleActions";
 
 interface ProjectsViewProps {
   onToast: (message: string, kind: "success" | "error") => void;
   onNavigateToFocus?: () => void;
+  onNavigateToLinkedItem?: (item: Item) => void;
   initialShowAdd?: boolean;
   onInitialShowAddConsumed?: () => void;
   initialSelectedId?: string | null;
@@ -46,194 +42,6 @@ function isTaskOverdue(task: Item): boolean {
   return due < todayKey();
 }
 
-function AddProjectForm({
-  onClose,
-  onCreated,
-  onToast,
-}: {
-  onClose: () => void;
-  onCreated: (item: Item) => void;
-  onToast: (message: string, kind: "success" | "error") => void;
-}) {
-  const [name, setName] = useState("");
-  const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState<ProjectStatus>("active");
-  const [area, setArea] = useState("");
-  const [priority, setPriority] = useState<ProjectPriority | "">("");
-  const [targetDate, setTargetDate] = useState("");
-  const [startedAt, setStartedAt] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
-      onToast("Project name is required.", "error");
-      return;
-    }
-    setSaving(true);
-    try {
-      const tags = [
-        ...new Set(["#project", ...detectTags(trimmed + " " + notes)]),
-      ].slice(0, 8);
-      const saved = await insertItem({
-        type: "project",
-        content: trimmed,
-        tags,
-        source: "projects-tab",
-        metadata: {
-          status,
-          notes: notes.trim() || null,
-          area: area.trim() || null,
-          priority: priority || null,
-          target_date: targetDate.trim() || null,
-          started_at: startedAt.trim() || null,
-        },
-      });
-      await emit("item:saved", {});
-      onCreated(saved);
-      onToast("Project created.", "success");
-    } catch (err) {
-      onToast(
-        err instanceof Error ? err.message : "Failed to create project",
-        "error",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <form
-      onSubmit={(e) => void handleSubmit(e)}
-      className="flex min-h-0 flex-1 flex-col overflow-auto p-4"
-    >
-      <FormPanelHeader title="New project" onClose={onClose} />
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <label className="block text-pds-sm text-pds-muted sm:col-span-2">
-          Title
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={saving}
-            placeholder="Project name…"
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-3 py-2 text-pds-base text-pds-text focus:border-pds-muted focus:outline-none"
-          />
-        </label>
-        <label className="block text-pds-sm text-pds-muted sm:col-span-2">
-          Notes
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            disabled={saving}
-            placeholder="Goals, scope, links…"
-            className="mt-1 w-full resize-y rounded border border-pds-border bg-pds-panel px-3 py-2 text-pds-base text-pds-text focus:border-pds-muted focus:outline-none"
-          />
-        </label>
-        <label className="block text-pds-sm text-pds-muted">
-          Status
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-            disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
-          >
-            {PROJECT_STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-pds-sm text-pds-muted">
-          Priority
-          <select
-            value={priority}
-            onChange={(e) =>
-              setPriority((e.target.value as ProjectPriority) || "")
-            }
-            disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
-          >
-            <option value="">None</option>
-            {PROJECT_PRIORITY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-pds-sm text-pds-muted">
-          Area
-          <input
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            list="project-area-presets-compose"
-            disabled={saving}
-            placeholder="work, home…"
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
-          />
-          <datalist id="project-area-presets-compose">
-            {PROJECT_AREA_PRESETS.map((a) => (
-              <option key={a} value={a} />
-            ))}
-          </datalist>
-        </label>
-        <label className="block text-pds-sm text-pds-muted">
-          Target date
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-            disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
-          />
-        </label>
-        <label className="block text-pds-sm text-pds-muted">
-          Started
-          <input
-            type="date"
-            value={startedAt}
-            onChange={(e) => setStartedAt(e.target.value)}
-            disabled={saving}
-            className="mt-1 w-full rounded border border-pds-border bg-pds-panel px-2 py-1.5 text-pds-base text-pds-text"
-          />
-        </label>
-      </div>
-      <button
-        type="submit"
-        disabled={saving || !name.trim()}
-        className="mt-4 w-fit pds-btn-primary px-4 py-2 text-pds-sm font-medium text-white disabled:opacity-40"
-      >
-        {saving ? "Creating…" : "Create project"}
-      </button>
-    </form>
-  );
-}
-
-function FormPanelHeader({
-  title,
-  onClose,
-}: {
-  title: string;
-  onClose?: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <h2 className="text-pds-base font-semibold text-pds-text">{title}</h2>
-      {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded border border-pds-border px-2 py-0.5 text-pds-sm text-pds-muted hover:bg-pds-chip"
-        >
-          Close
-        </button>
-      )}
-    </div>
-  );
-}
 
 function ProjectDetailView({ item }: { item: Item }) {
   const meta = item.metadata as ProjectMetadata;
@@ -403,6 +211,7 @@ function AddTaskToProjectForm({
 export function ProjectsView({
   onToast,
   onNavigateToFocus,
+  onNavigateToLinkedItem,
   initialShowAdd = false,
   onInitialShowAddConsumed,
   initialSelectedId = null,
@@ -420,14 +229,15 @@ export function ProjectsView({
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ItemStatus | "all">("active");
-  const [showAdd, setShowAdd] = useState(initialShowAdd);
+  const [composeKey, setComposeKey] = useState(0);
   const [taskBusyId, setTaskBusyId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Item | null>(null);
 
   useEffect(() => {
     if (initialShowAdd) {
-      setShowAdd(true);
+      setSelectedId(null);
+      setComposeKey((k) => k + 1);
       onInitialShowAddConsumed?.();
     }
   }, [initialShowAdd, onInitialShowAddConsumed]);
@@ -435,7 +245,6 @@ export function ProjectsView({
   useEffect(() => {
     if (initialSelectedId) {
       setSelectedId(initialSelectedId);
-      setShowAdd(false);
       onInitialSelectedConsumed?.();
     }
   }, [initialSelectedId, onInitialSelectedConsumed]);
@@ -531,7 +340,22 @@ export function ProjectsView({
     setEditing(false);
     setSelectedTaskId(null);
     setSelectedTask(null);
-    setShowAdd(true);
+    setComposeKey((k) => k + 1);
+  }
+
+  function handleComposeSaved(item: Item) {
+    setSelectedId(item.id);
+    setEditing(false);
+    void refresh();
+  }
+
+  function handleLinkedItemNavigate(item: Item) {
+    if (item.type === "project") {
+      setEditing(false);
+      setSelectedId(item.id);
+      return;
+    }
+    onNavigateToLinkedItem?.(item);
   }
 
   function clearTaskSelection() {
@@ -663,7 +487,6 @@ export function ProjectsView({
                   type="button"
                   onClick={() => {
                     setEditing(false);
-                    setShowAdd(false);
                     setSelectedId(item.id);
                   }}
                   className={`w-full px-2 py-2 text-left text-pds-sm transition ${
@@ -693,34 +516,15 @@ export function ProjectsView({
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto border-r border-pds-border">
         <div
-          key={`${selectedId ?? "compose"}-${editing ? "edit" : "view"}-${showAdd ? "add" : ""}`}
+          key={`${selectedId ?? "compose"}-${editing ? "edit" : "view"}`}
           className="pds-view-enter flex min-h-0 min-w-0 flex-1 flex-col"
         >
-          {showAdd && !selectedId ? (
-            <AddProjectForm
-              onClose={() => setShowAdd(false)}
-              onCreated={(item) => {
-                setSelectedId(item.id);
-                setShowAdd(false);
-                void refresh();
-              }}
+          {selectedId == null ? (
+            <ProjectComposeMode
+              key={composeKey}
+              onSaved={handleComposeSaved}
               onToast={onToast}
             />
-          ) : !selectedId ? (
-            <div className="flex flex-1 flex-col items-center justify-center p-6">
-              <EmptyState
-                title="Select a project"
-                description="Pick a project from the list or create a new one."
-              >
-                <button
-                  type="button"
-                  onClick={startNewProject}
-                  className="pds-btn-primary px-3 py-1.5 text-pds-sm font-medium text-white"
-                >
-                  New project
-                </button>
-              </EmptyState>
-            </div>
           ) : !selectedItem ? (
             <p className="p-4 text-pds-base text-pds-muted">Loading…</p>
           ) : editing ? (
@@ -766,7 +570,11 @@ export function ProjectsView({
           />
           <ul
             className={`min-h-0 overflow-auto p-2 ${
-              selectedTaskId ? "max-h-[42%] shrink-0" : "flex-1"
+              selectedTaskId
+                ? "max-h-[42%] shrink-0"
+                : onNavigateToLinkedItem
+                  ? "max-h-[40%] shrink-0"
+                  : "flex-1"
             }`}
           >
             {linkedTasks.length === 0 && (
@@ -833,12 +641,28 @@ export function ProjectsView({
                         onNavigateToFocus={onNavigateToFocus}
                         className="pds-btn-primary-muted px-2 py-0.5 text-pds-caption"
                       />
+                      {taskStatus === "active" && (
+                        <TaskScheduleActions
+                          task={task}
+                          onChanged={() => void refresh()}
+                          onToast={onToast}
+                        />
+                      )}
                     </div>
                   </div>
                 </li>
               );
             })}
           </ul>
+          {!selectedTaskId && onNavigateToLinkedItem && (
+            <ProjectRelatedSection
+              embedded
+              project={projectDetail}
+              onNavigateToItem={handleLinkedItemNavigate}
+              onToast={onToast}
+              onChanged={() => void refresh()}
+            />
+          )}
           {selectedTaskId && (
             <div className="flex min-h-0 flex-1 flex-col border-t border-pds-border">
               <div className="flex items-center justify-between gap-2 border-b border-pds-border px-3 py-2">
