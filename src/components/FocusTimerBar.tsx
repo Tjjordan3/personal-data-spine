@@ -140,7 +140,7 @@ export function FocusTimerBar() {
                         if (timer.kind === "break") timer.startBreak();
                         else void timer.startWithCurrentTask();
                       }}
-                      className="pds-btn-primary px-2.5 py-1 text-[11px] disabled:opacity-40"
+                      className="pds-btn-primary px-2.5 py-1 text-[11px]"
                     >
                       {timer.kind === "break" ? "Start break" : "Start"}
                     </button>

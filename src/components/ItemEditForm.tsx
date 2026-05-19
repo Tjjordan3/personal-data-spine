@@ -535,7 +535,7 @@ export function ItemEditForm({
         <button
           type="submit"
           disabled={saving || duplicating}
-          className="pds-btn-primary flex-1 py-1.5 text-xs disabled:opacity-40"
+          className="pds-btn-primary flex-1 py-1.5 text-xs"
         >
           {saving ? "Saving…" : "Save"}
         </button>

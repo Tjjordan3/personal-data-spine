@@ -350,7 +350,7 @@ export function AddSubscriptionPicker({
             type="button"
             disabled={saving || !customName.trim()}
             onClick={confirmCustom}
-            className="pds-btn-primary shrink-0 px-4 py-2 text-xs disabled:opacity-40"
+            className="pds-btn-primary shrink-0 px-4 py-2 text-xs"
           >
             Continue
           </button>
@@ -445,7 +445,7 @@ export function AddSubscriptionPicker({
             <button
               type="submit"
               disabled={saving}
-              className="pds-btn-primary px-4 py-2 text-xs disabled:opacity-40"
+              className="pds-btn-primary px-4 py-2 text-xs"
             >
               {saving ? "Adding…" : "Add subscription"}
             </button>

@@ -303,7 +303,7 @@ body {
   }
 
   .pds-btn-primary {
-    @apply rounded-md font-medium disabled:opacity-40;
+    @apply rounded-md font-medium;
     background-color: var(--pds-accent-bg);
     color: var(--pds-accent-fg);
   }
@@ -312,8 +312,15 @@ body {
     filter: brightness(1.08);
   }
 
+  .pds-btn-primary:disabled {
+    cursor: not-allowed;
+    background-color: var(--pds-chip);
+    color: var(--pds-muted);
+    filter: none;
+  }
+
   .pds-btn-primary-muted {
-    @apply rounded-md font-medium text-white disabled:opacity-40;
+    @apply rounded-md font-medium text-white;
     background-color: var(--pds-accent-bg);
   }
 
@@ -321,19 +328,36 @@ body {
     filter: brightness(1.08);
   }
 
+  .pds-btn-primary-muted:disabled {
+    cursor: not-allowed;
+    background-color: var(--pds-chip);
+    color: var(--pds-muted);
+    filter: none;
+  }
+
   .pds-btn-secondary {
     @apply rounded-md border border-pds-border bg-pds-panel font-medium text-pds-text hover:bg-pds-panel-2;
   }
 
-  .pds-btn-accent-outline {
-    @apply rounded-md border font-medium;
-    border-color: color-mix(in srgb, var(--pds-accent-bg) 45%, var(--pds-border));
-    background-color: color-mix(in srgb, var(--pds-accent-bg) 10%, var(--pds-panel));
-    color: var(--pds-accent-bg);
+  .pds-btn-secondary:disabled {
+    @apply cursor-not-allowed opacity-60;
   }
 
-  .pds-btn-accent-outline:hover {
-    background-color: color-mix(in srgb, var(--pds-accent-bg) 16%, var(--pds-panel));
+  /* Accent secondary — readable on light backgrounds (not a washed tint). */
+  .pds-btn-accent-outline {
+    @apply rounded-md border font-medium;
+    border-color: #047857;
+    background-color: #ecfdf5;
+    color: #065f46;
+  }
+
+  .pds-btn-accent-outline:hover:not(:disabled) {
+    background-color: #d1fae5;
+  }
+
+  .pds-btn-accent-outline:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
   }
 
   .dark .pds-btn-accent-outline {
@@ -342,7 +366,7 @@ body {
     color: #6ee7b7;
   }
 
-  .dark .pds-btn-accent-outline:hover {
+  .dark .pds-btn-accent-outline:hover:not(:disabled) {
     background-color: color-mix(in srgb, var(--pds-accent-bg) 20%, transparent);
   }
 

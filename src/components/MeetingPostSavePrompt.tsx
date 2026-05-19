@@ -135,7 +135,7 @@ export function MeetingPostSavePrompt({
               type="button"
               disabled={busy}
               onClick={() => void handleStartFocus()}
-              className="pds-btn-primary px-3 py-1.5 text-pds-caption disabled:opacity-40"
+              className="pds-btn-primary px-3 py-1.5 text-pds-caption"
             >
               Start focus on first action
             </button>
@@ -143,7 +143,7 @@ export function MeetingPostSavePrompt({
               type="button"
               disabled={busy}
               onClick={() => void handleAddAllToToday()}
-              className="rounded border border-pds-border px-3 py-1.5 text-pds-caption text-pds-muted hover:bg-pds-chip disabled:opacity-40"
+              className="rounded border border-pds-border px-3 py-1.5 text-pds-caption text-pds-muted hover:bg-pds-chip"
             >
               Set open tasks due today
             </button>
@@ -166,7 +166,7 @@ export function MeetingPostSavePrompt({
                   type="button"
                   disabled={busy}
                   onClick={() => void handleAcceptLink(suggestion)}
-                  className="pds-btn-primary px-2.5 py-1 text-pds-caption disabled:opacity-40"
+                  className="pds-btn-primary px-2.5 py-1 text-pds-caption"
                 >
                   Link
                 </button>

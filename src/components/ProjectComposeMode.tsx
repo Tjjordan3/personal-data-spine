@@ -216,7 +216,7 @@ export function ProjectComposeMode({
         type="button"
         onClick={() => void handleSave()}
         disabled={!canSave}
-        className="w-fit pds-btn-primary px-4 py-2 text-pds-sm font-medium text-white disabled:opacity-40"
+        className="w-fit pds-btn-primary px-4 py-2 text-pds-sm font-medium"
       >
         {saving ? "Creating…" : "Create project"}
       </button>

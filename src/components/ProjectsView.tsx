@@ -199,7 +199,7 @@ function AddTaskToProjectForm({
         <button
           type="submit"
           disabled={saving || !content.trim()}
-          className="shrink-0 pds-btn-primary px-2 py-1 text-pds-caption font-medium text-white disabled:opacity-40"
+          className="shrink-0 pds-btn-primary px-2 py-1 text-pds-caption font-medium text-white"
         >
           Add
         </button>
@@ -622,7 +622,7 @@ export function ProjectsView({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleTaskStatus(task, "done")}
-                          className="pds-btn-primary-muted px-2 py-0.5 text-pds-caption disabled:opacity-40"
+                          className="pds-btn-primary-muted px-2 py-0.5 text-pds-caption"
                         >
                           Done
                         </button>
@@ -631,7 +631,7 @@ export function ProjectsView({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleTaskStatus(task, "active")}
-                          className="rounded border border-pds-border px-2 py-0.5 text-pds-caption text-pds-muted disabled:opacity-40"
+                          className="rounded border border-pds-border px-2 py-0.5 text-pds-caption text-pds-muted disabled:opacity-50"
                         >
                           Restore
                         </button>
