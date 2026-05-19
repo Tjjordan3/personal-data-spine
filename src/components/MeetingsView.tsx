@@ -54,6 +54,8 @@ export function MeetingsView({
   const [error, setError] = useState<string | null>(null);
   const [composeKey, setComposeKey] = useState(0);
   const [taskBusyId, setTaskBusyId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Item | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -86,8 +88,12 @@ export function MeetingsView({
       setSelectedItem(null);
       setLinkedTasks([]);
       setEditing(false);
+      setSelectedTaskId(null);
+      setSelectedTask(null);
       return;
     }
+    setSelectedTaskId(null);
+    setSelectedTask(null);
     void getItemById(selectedId).then(async (item) => {
       setSelectedItem(item);
       if (item?.type === "meeting") {
@@ -97,6 +103,14 @@ export function MeetingsView({
       }
     });
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!selectedTaskId) {
+      setSelectedTask(null);
+      return;
+    }
+    void getItemById(selectedTaskId).then(setSelectedTask);
+  }, [selectedTaskId]);
 
   useEffect(() => {
     const unlisten = listen("item:saved", () => {
@@ -118,7 +132,22 @@ export function MeetingsView({
     setSelectedItem(null);
     setLinkedTasks([]);
     setEditing(false);
+    setSelectedTaskId(null);
+    setSelectedTask(null);
     setComposeKey((k) => k + 1);
+  }
+
+  function clearTaskSelection() {
+    setSelectedTaskId(null);
+    setSelectedTask(null);
+  }
+
+  function handleTaskSelect(taskId: string) {
+    if (selectedTaskId === taskId) {
+      clearTaskSelection();
+      return;
+    }
+    setSelectedTaskId(taskId);
   }
 
   async function handleTaskStatus(task: Item, status: ItemStatus) {
@@ -127,7 +156,12 @@ export function MeetingsView({
       await setItemStatus(task.id, status);
       await emit("item:saved", {});
       if (selectedItem?.type === "meeting") {
-        setLinkedTasks(await getTasksForMeeting(selectedItem.id));
+        const tasks = await getTasksForMeeting(selectedItem.id);
+        setLinkedTasks(tasks);
+        if (selectedTaskId) {
+          const fresh = tasks.find((t) => t.id === selectedTaskId);
+          if (fresh) setSelectedTask(fresh);
+        }
       }
       onToast(
         status === "done" ? "Task marked done." : "Task restored.",
@@ -262,12 +296,10 @@ export function MeetingsView({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <h2 className="text-sm font-semibold text-pds-text">
-                    {selectedItem.type === "meeting"
-                      ? meetingTitle(selectedItem)
-                      : "Linked task"}
+                    {meetingTitle(selectedItem)}
                   </h2>
                   <p className="mt-0.5 text-[11px] text-pds-muted">
-                    {selectedItem.type}
+                    meeting
                     {" · "}
                     {formatTime(selectedItem.created_at)}
                     {getItemStatus(selectedItem) !== "active" &&
@@ -284,9 +316,7 @@ export function MeetingsView({
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-auto p-4">
-              {selectedItem.type === "meeting" ? (
-                <>
-                  {selectedItem.content ? (
+              {selectedItem.content ? (
                     <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-pds-text">
                       {selectedItem.content}
                     </pre>
@@ -305,12 +335,6 @@ export function MeetingsView({
                       </ul>
                     </div>
                   )}
-                </>
-              ) : (
-                <p className="text-sm leading-relaxed text-pds-text">
-                  {selectedItem.content}
-                </p>
-              )}
               {selectedItem.tags.length > 0 && (
                 <p className="mt-4 text-[11px] text-pds-muted">
                   {selectedItem.tags.join(" ")}
@@ -323,7 +347,7 @@ export function MeetingsView({
       </main>
 
       {meetingDetail && (
-        <aside className="flex w-52 shrink-0 flex-col border-l border-pds-border">
+        <aside className="flex w-80 shrink-0 flex-col border-l border-pds-border">
           <div className="border-b border-pds-border p-3">
             <h3 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
               Linked tasks
@@ -332,7 +356,11 @@ export function MeetingsView({
               {linkedTasks.length} task{linkedTasks.length === 1 ? "" : "s"}
             </p>
           </div>
-          <ul className="min-h-0 flex-1 overflow-auto p-2">
+          <ul
+            className={`min-h-0 overflow-auto p-2 ${
+              selectedTaskId ? "max-h-[42%] shrink-0" : "flex-1"
+            }`}
+          >
             {linkedTasks.length === 0 && (
               <li className="px-2 py-4 text-[10px] text-pds-muted">
                 No linked tasks. Save with actions or add tasks later.
@@ -346,17 +374,14 @@ export function MeetingsView({
                 <li key={task.id} className="mb-2">
                   <div
                     className={`rounded border px-2 py-2 text-[11px] ${
-                      selectedId === task.id
+                      selectedTaskId === task.id
                         ? "border-violet-600 bg-violet-950/30"
                         : "border-pds-border bg-pds-panel/50"
                     }`}
                   >
                     <button
                       type="button"
-                      onClick={() => {
-                        setEditing(true);
-                        setSelectedId(task.id);
-                      }}
+                      onClick={() => handleTaskSelect(task.id)}
                       className="w-full text-left"
                     >
                       <p className="leading-snug text-pds-text">
@@ -406,6 +431,39 @@ export function MeetingsView({
               );
             })}
           </ul>
+          {selectedTaskId && (
+            <div className="flex min-h-0 flex-1 flex-col border-t border-pds-border">
+              <div className="flex items-center justify-between gap-2 border-b border-pds-border px-3 py-2">
+                <h4 className="text-[11px] font-medium uppercase tracking-wide text-pds-muted">
+                  Edit task
+                </h4>
+                <button
+                  type="button"
+                  onClick={clearTaskSelection}
+                  className="rounded border border-pds-border px-2 py-0.5 text-[10px] text-pds-muted hover:bg-pds-chip"
+                  aria-label="Close task editor"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-auto">
+                {!selectedTask ? (
+                  <p className="p-3 text-[11px] text-pds-muted">Loading…</p>
+                ) : (
+                  <ItemEditForm
+                    item={selectedTask}
+                    onSaved={(updated) => {
+                      setSelectedTask(updated);
+                      void refresh();
+                    }}
+                    onCancel={clearTaskSelection}
+                    onToast={onToast}
+                    onNavigateToFocus={onNavigateToFocus}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </aside>
       )}
     </div>
