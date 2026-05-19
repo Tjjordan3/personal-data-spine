@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { listen } from "@tauri-apps/api/event";
-import { GraphView } from "./components/GraphView";
 import { ItemList } from "./components/ItemList";
-import { MeetingsView } from "./components/MeetingsView";
 import { FocusView } from "./components/FocusView";
-import { ProjectsView } from "./components/ProjectsView";
-import { SubscriptionsView } from "./components/SubscriptionsView";
 import { RelatedPanel } from "./components/RelatedPanel";
 import { FocusTimerProvider } from "./components/FocusTimerContext";
 import {
@@ -13,7 +16,6 @@ import {
   type FacetState,
 } from "./components/SearchFacetsBar";
 import { QuickCreateForm } from "./components/QuickCreateForm";
-import { SettingsPanel } from "./components/SettingsPanel";
 import {
   CommandPalette,
   useCommandPaletteShortcut,
@@ -26,6 +28,34 @@ import { searchWithFacets, type SearchResult } from "./lib/db/search";
 import type { Item } from "./lib/db/types";
 
 type View = AppView;
+
+const GraphView = lazy(() =>
+  import("./components/GraphView").then((m) => ({ default: m.GraphView })),
+);
+const MeetingsView = lazy(() =>
+  import("./components/MeetingsView").then((m) => ({ default: m.MeetingsView })),
+);
+const ProjectsView = lazy(() =>
+  import("./components/ProjectsView").then((m) => ({ default: m.ProjectsView })),
+);
+const SubscriptionsView = lazy(() =>
+  import("./components/SubscriptionsView").then((m) => ({
+    default: m.SubscriptionsView,
+  })),
+);
+const SettingsPanel = lazy(() =>
+  import("./components/SettingsPanel").then((m) => ({
+    default: m.SettingsPanel,
+  })),
+);
+
+function DeferredRouteFallback() {
+  return (
+    <div className="flex min-h-0 flex-1 items-center justify-center bg-pds-bg px-4">
+      <p className="text-xs text-pds-muted">Loading…</p>
+    </div>
+  );
+}
 
 const DEFAULT_FACETS: FacetState = {
   query: "",
@@ -290,10 +320,18 @@ export default function App() {
           </div>
           {showGraph && (
             <div className="border-b border-pds-border px-4 py-2">
-              <GraphView
-                focusId={selectedId}
-                onSelectItem={(id) => setSelectedId(id)}
-              />
+              <Suspense
+                fallback={
+                  <p className="py-6 text-center text-xs text-pds-muted">
+                    Loading graph…
+                  </p>
+                }
+              >
+                <GraphView
+                  focusId={selectedId}
+                  onSelectItem={(id) => setSelectedId(id)}
+                />
+              </Suspense>
             </div>
           )}
           <div className="flex min-h-0 flex-1">
@@ -329,35 +367,43 @@ export default function App() {
       )}
 
       {view === "subscriptions" && (
-        <SubscriptionsView
-          onToast={showToast}
-          initialShowAdd={subscriptionsAddOpen}
-          onInitialShowAddConsumed={() => setSubscriptionsAddOpen(false)}
-        />
+        <Suspense fallback={<DeferredRouteFallback />}>
+          <SubscriptionsView
+            onToast={showToast}
+            initialShowAdd={subscriptionsAddOpen}
+            onInitialShowAddConsumed={() => setSubscriptionsAddOpen(false)}
+          />
+        </Suspense>
       )}
 
       {view === "projects" && (
-        <ProjectsView
-          onToast={showToast}
-          initialShowAdd={projectsAddOpen}
-          onInitialShowAddConsumed={() => setProjectsAddOpen(false)}
-          initialSelectedId={projectsFocusId}
-          onInitialSelectedConsumed={() => setProjectsFocusId(null)}
-        />
+        <Suspense fallback={<DeferredRouteFallback />}>
+          <ProjectsView
+            onToast={showToast}
+            initialShowAdd={projectsAddOpen}
+            onInitialShowAddConsumed={() => setProjectsAddOpen(false)}
+            initialSelectedId={projectsFocusId}
+            onInitialSelectedConsumed={() => setProjectsFocusId(null)}
+          />
+        </Suspense>
       )}
 
       {view === "meeting" && (
         <main className="flex min-h-0 flex-1 overflow-hidden">
-          <MeetingsView onToast={showToast} />
+          <Suspense fallback={<DeferredRouteFallback />}>
+            <MeetingsView onToast={showToast} />
+          </Suspense>
         </main>
       )}
 
       {view === "settings" && (
         <main className="min-h-0 flex-1 overflow-auto">
-          <SettingsPanel
-            onClose={() => setView("focus")}
-            onToast={showToast}
-          />
+          <Suspense fallback={<DeferredRouteFallback />}>
+            <SettingsPanel
+              onClose={() => setView("focus")}
+              onToast={showToast}
+            />
+          </Suspense>
         </main>
       )}
 

@@ -281,7 +281,7 @@ export function formatFocusSummary(summary: FocusSummary): string {
   return parts.join(" · ");
 }
 
-/** Top task for "Start next" — overdue/today first, then soon. */
+/** Top task for Focus “Start focus” — overdue/today first, then soon. */
 export function pickNextFocusTask(entries: FocusEntry[]): FocusEntry | null {
   const tasks = entries.filter((e) => e.kind === "task");
   if (tasks.length === 0) return null;

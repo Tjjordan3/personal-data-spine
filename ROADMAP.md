@@ -8,7 +8,7 @@ Local-first Tauri/React/SQLite app. Philosophy: **leverage** (fewer taps, action
 |---|--------|--------|
 | **M0** | Trust the data — export, backup, import | **Shipped** (v5) |
 | **M1** | Command palette (`Ctrl+K` / `Cmd+K`) | **Shipped** (v5) |
-| **M2** | Today that acts — Focus actions, snooze, Start next | **Shipped** (v5) |
+| **M2** | Today that acts — Focus actions, snooze, Start focus | **Shipped** (v5) |
 | **M3** | Meetings leverage — parser, linked tasks rollup | Planned |
 | **M4** | Search & graph — FTS5, link picker, layout | Planned |
 | **M5** | Capture everywhere — shortcuts, templates | Planned |
@@ -29,7 +29,12 @@ Local-first Tauri/React/SQLite app. Philosophy: **leverage** (fewer taps, action
 
 - Task row actions: Start, Done, Snooze, Reschedule, Log outcome
 - `metadata.snoozed_until` hides tasks until date
-- **Start next** — highest-urgency task in stream
+- **Start focus** — highest-urgency task in stream
+
+## Startup performance
+
+- `index.html`: themed splash + `pds-settings` sync before JS bundle
+- Code-split heavy routes (Subscriptions, Projects, Meetings, Settings, Graph)
 
 ## Later (M3–M6)
 

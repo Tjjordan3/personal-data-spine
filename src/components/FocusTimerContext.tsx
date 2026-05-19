@@ -234,8 +234,11 @@ export function FocusTimerProvider({
     setEndsAt(state.endsAt);
     setPausedRemaining(state.pausedRemainingSeconds);
     setWorkBlockId(state.workBlockId);
-    if (state.phase === "task_pick") setShowTaskPicker(true);
-  }, []);
+    if (state.phase === "task_pick") {
+      setShowTaskPicker(true);
+      void loadTasks();
+    }
+  }, [loadTasks]);
 
   useEffect(() => {
     if (phase !== "running" && phase !== "break" && phase !== "paused") return;
