@@ -313,7 +313,7 @@ export default function App() {
   return (
     <FocusTimerProvider onStatsChange={() => setFocusStatsTick((t) => t + 1)}>
     <div className="flex h-screen flex-col bg-pds-bg text-pds-text">
-      <header className="flex items-center gap-3 border-b border-pds-border px-4 py-3">
+      <header className="flex items-center gap-3 border-b border-pds-border bg-pds-panel px-4 py-3">
         <div>
           <h1 className="pds-wordmark text-pds-base text-pds-text">
             DonePath

@@ -5,6 +5,8 @@ import {
   CaptureForm,
   type CaptureFormHandle,
 } from "../components/CaptureForm";
+import { loadSettings } from "../lib/settings";
+import { applyTheme } from "../lib/theme";
 
 export function Capture() {
   const [focusToken, setFocusToken] = useState(0);
@@ -18,7 +20,12 @@ export function Capture() {
   }, [tauriWindow]);
 
   useEffect(() => {
+    applyTheme(loadSettings().theme);
+  }, []);
+
+  useEffect(() => {
     const unlistenShow = listen("capture:focus", () => {
+      applyTheme(loadSettings().theme);
       setFocusToken((t) => t + 1);
     });
     return () => {

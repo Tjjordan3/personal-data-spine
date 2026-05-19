@@ -22,7 +22,7 @@ import {
   type ThemePreference,
 } from "../lib/settings";
 import { getSchemaVersion, CURRENT_SCHEMA_VERSION } from "../lib/db/schema";
-import { applyTheme } from "../lib/theme";
+import { applyTheme, broadcastThemeChange } from "../lib/theme";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface SettingsPanelProps {
@@ -183,13 +183,19 @@ export function SettingsPanel({
   function saveAll() {
     saveSettings(appSettings);
     applyTheme(appSettings.theme);
+    broadcastThemeChange(appSettings.theme);
     saveLlmSettings(llmSettings);
     onToast("Settings saved.", "success");
   }
 
   function handleThemeChange(theme: ThemePreference) {
-    setAppSettings((s) => ({ ...s, theme }));
-    applyTheme(theme);
+    setAppSettings((s) => {
+      const next = { ...s, theme };
+      saveSettings(next);
+      applyTheme(theme);
+      broadcastThemeChange(theme);
+      return next;
+    });
   }
 
   return (

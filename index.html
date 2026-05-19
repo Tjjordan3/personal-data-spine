@@ -28,8 +28,9 @@
               window.matchMedia &&
               window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
         } catch (_) {
-          document.documentElement.classList.add("dark");
+          /* Match settings default (system) — avoid forcing dark on secondary windows */
         }
       })();
     </script>
