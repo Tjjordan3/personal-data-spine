@@ -101,6 +101,25 @@ export async function getGraphData(focusId?: string | null): Promise<GraphData> 
   return { nodes, edges };
 }
 
+/** IDs reachable from focusId via item_links (includes focusId). */
+export async function getGraphNeighborhoodIds(
+  focusId: string,
+): Promise<Set<string>> {
+  const db = await getDatabase();
+  const linkRows = await db.select<LinkRow[]>(
+    `SELECT from_id, to_id, link_type FROM item_links`,
+  );
+  const allEdges: GraphEdge[] = linkRows.map((row) => ({
+    from: row.from_id,
+    to: row.to_id,
+    link_type: row.link_type as LinkType,
+  }));
+  if (allEdges.length === 0) return new Set([focusId]);
+  const adj = buildAdjacency(allEdges);
+  if (!adj.has(focusId)) return new Set([focusId]);
+  return reachableFrom(focusId, adj);
+}
+
 export function pickDefaultFocusId(
   nodes: Item[],
   edges: GraphEdge[],

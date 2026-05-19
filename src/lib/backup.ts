@@ -1,7 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { writeJsonExport } from "./db/export";
-import { resetDatabaseConnection } from "./db/database";
+import { resetDatabaseConnection, getDatabase } from "./db/database";
+import { rebuildFtsIndex } from "./db/fts";
 import {
   loadSettings,
   saveSettings,
@@ -60,5 +61,7 @@ export async function importSqliteRestore(): Promise<boolean> {
   if (!path || Array.isArray(path)) return false;
   await invoke("import_database", { source: path });
   resetDatabaseConnection();
+  const db = await getDatabase();
+  await rebuildFtsIndex(db);
   return true;
 }

@@ -189,6 +189,40 @@ export function SettingsPanel({
 
       <section className="space-y-2 rounded-lg border border-pds-border p-3">
         <h3 className="text-xs font-medium uppercase tracking-wide text-pds-muted">
+          Keyboard shortcuts
+        </h3>
+        <ul className="space-y-1.5 text-[11px] text-pds-muted">
+          <li>
+            <span className="font-medium text-pds-text">Ctrl+K / Cmd+K</span> —
+            Command palette (navigation, search, new items)
+          </li>
+          <li>
+            <span className="font-medium text-pds-text">
+              {appSettings.captureShortcut}
+            </span>{" "}
+            — Quick capture window (global)
+          </li>
+          <li>
+            <span className="font-medium text-pds-text">/</span> — Focus inbox
+            search (Inbox view)
+          </li>
+          <li>
+            <span className="font-medium text-pds-text">Focus tab</span> — Space
+            start/pause, R reset, S skip break, 1/2/3 presets
+          </li>
+          <li>
+            <span className="font-medium text-pds-text">Meetings</span> —
+            Ctrl+Enter parse, Ctrl+S save (outside note textarea)
+          </li>
+          <li>
+            <span className="font-medium text-pds-text">Capture</span> — Enter
+            save, Esc close, Ctrl+Z undo
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-2 rounded-lg border border-pds-border p-3">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-pds-muted">
           Quick capture
         </h3>
         <label className="block text-xs text-pds-muted">

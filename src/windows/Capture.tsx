@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { emit, listen } from "@tauri-apps/api/event";
 import { deleteItem, insertItem } from "../lib/db/items";
+import { NOTE_TEMPLATES } from "../lib/capture/templates";
 
 const MAX_UNDO = 20;
 
@@ -144,6 +145,18 @@ export function Capture() {
           savedFlash ? "border-emerald-600" : "border-pds-border/80"
         }`}
       >
+        <div className="mb-2 flex flex-wrap gap-1">
+          {NOTE_TEMPLATES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setText(t.body)}
+              className="rounded border border-pds-border px-1.5 py-0.5 text-[10px] text-pds-muted hover:bg-pds-chip"
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
         <textarea
           ref={inputRef}
           value={text}

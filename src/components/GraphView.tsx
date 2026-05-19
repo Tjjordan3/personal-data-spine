@@ -99,6 +99,74 @@ function computeLayout(
   return layout;
 }
 
+/** Light spring refinement on radial seed positions. */
+function refineSpringLayout(
+  layout: LayoutNode[],
+  edges: GraphEdge[],
+  focusId: string,
+  iterations = 48,
+): LayoutNode[] {
+  const nodes = layout.map((n) => ({ ...n, vx: 0, vy: 0 }));
+  const cx = WIDTH / 2;
+  const cy = HEIGHT / 2;
+
+  for (let iter = 0; iter < iterations; iter++) {
+    for (const node of nodes) {
+      node.vx = 0;
+      node.vy = 0;
+    }
+
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i];
+        const b = nodes[j];
+        let dx = a.x - b.x;
+        let dy = a.y - b.y;
+        const dist = Math.hypot(dx, dy) || 0.01;
+        const repulse = 1200 / (dist * dist);
+        dx = (dx / dist) * repulse;
+        dy = (dy / dist) * repulse;
+        a.vx += dx;
+        a.vy += dy;
+        b.vx -= dx;
+        b.vy -= dy;
+      }
+    }
+
+    for (const edge of edges) {
+      const a = nodes.find((n) => n.id === edge.from);
+      const b = nodes.find((n) => n.id === edge.to);
+      if (!a || !b) continue;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy) || 0.01;
+      const target = 90;
+      const pull = (dist - target) * 0.04;
+      const fx = (dx / dist) * pull;
+      const fy = (dy / dist) * pull;
+      a.vx += fx;
+      a.vy += fy;
+      b.vx -= fx;
+      b.vy -= fy;
+    }
+
+    const focus = nodes.find((n) => n.id === focusId);
+    if (focus) {
+      focus.vx += (cx - focus.x) * 0.02;
+      focus.vy += (cy - focus.y) * 0.02;
+    }
+
+    for (const node of nodes) {
+      node.x += node.vx * 0.15;
+      node.y += node.vy * 0.15;
+      node.x = Math.max(24, Math.min(WIDTH - 24, node.x));
+      node.y = Math.max(24, Math.min(HEIGHT - 24, node.y));
+    }
+  }
+
+  return nodes.map(({ id, item, x, y }) => ({ id, item, x, y }));
+}
+
 function preview(content: string, max = 24): string {
   const line = content.replace(/\s+/g, " ").trim();
   return line.length > max ? `${line.slice(0, max)}…` : line;
@@ -140,7 +208,8 @@ export function GraphView({ focusId, onSelectItem }: GraphViewProps) {
 
   const layout = useMemo(() => {
     if (!effectiveFocus || nodes.length === 0) return [];
-    return computeLayout(nodes, edges, effectiveFocus);
+    const seed = computeLayout(nodes, edges, effectiveFocus);
+    return refineSpringLayout(seed, edges, effectiveFocus);
   }, [nodes, edges, effectiveFocus]);
 
   const positions = useMemo(

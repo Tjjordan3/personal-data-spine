@@ -9,10 +9,10 @@ Local-first Tauri/React/SQLite app. Philosophy: **leverage** (fewer taps, action
 | **M0** | Trust the data — export, backup, import | **Shipped** (v5) |
 | **M1** | Command palette (`Ctrl+K` / `Cmd+K`) | **Shipped** (v5) |
 | **M2** | Today that acts — Focus actions, snooze, Start focus | **Shipped** (v5) |
-| **M3** | Meetings leverage — parser, linked tasks rollup | Planned |
-| **M4** | Search & graph — FTS5, link picker, layout | Planned |
-| **M5** | Capture everywhere — shortcuts, templates | Planned |
-| **M6** | Polish & performance — empty states, batch ops | Planned |
+| **M3** | Meetings leverage — parser, linked tasks rollup | **Shipped** (v5) |
+| **M4** | Search & graph — FTS5, link picker, layout | **Shipped** (v5) |
+| **M5** | Capture everywhere — shortcuts, templates | **Shipped** (v5) |
+| **M6** | Polish & performance — empty states, batch ops | **Shipped** (v5) |
 
 ## M0 — Trust the data
 
@@ -31,11 +31,36 @@ Local-first Tauri/React/SQLite app. Philosophy: **leverage** (fewer taps, action
 - `metadata.snoozed_until` hides tasks until date
 - **Start focus** — highest-urgency task in stream
 
+## M3 — Meetings leverage
+
+- Linked tasks sidebar: status, Done/restore, overdue, Start focus
+- Save meeting with notes only (`task_count` 0)
+- Parser: `DECISION:` lines → `metadata.decisions[]`; relative dates (tomorrow, EOW, weekdays)
+- Project picker on parse preview rows; meeting keyboard shortcuts
+
+## M4 — Search & graph
+
+- SQLite **FTS5** (`items_fts`) with LIKE fallback; rebuild on import
+- **Link picker** modal in Related panel (search by title/content)
+- Inbox **Linked to selection** filter; spring-refined graph layout
+
+## M5 — Capture everywhere
+
+- Meeting templates (Standup, 1:1, Retro)
+- Note templates in capture window and command palette
+- Shortcuts documented in Settings
+
+## M6 — Polish & performance
+
+- Shared **EmptyState** for Focus, Inbox, Meetings, etc.
+- Inbox **Mark visible done** batch action
+- FTS-backed search; single-query meeting task list
+
 ## Startup performance
 
 - `index.html`: themed splash + `pds-settings` sync before JS bundle
 - Code-split heavy routes (Subscriptions, Projects, Meetings, Settings, Graph)
 
-## Later (M3–M6)
+## Later
 
-See [V5.md](V5.md) for meetings hub and deferred v4 items.
+See [V5.md](V5.md) optional items (subscription reminders, mobile, etc.).

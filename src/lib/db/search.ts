@@ -1,6 +1,7 @@
+import { getGraphNeighborhoodIds } from "./graph";
+import { ftsSearchItemIds } from "./fts";
 import { getItemStatus, type ItemStatus } from "./itemStatus";
 import { getDatabase } from "./database";
-import { getLinksForItem } from "./links";
 import type { Item, ItemType } from "./types";
 
 export interface SearchFacets {
@@ -67,17 +68,31 @@ function isDueSoon(item: Item, withinDays = 7): boolean {
   return dueDate >= now && dueDate <= limit;
 }
 
+function meetingTitleMatch(item: Item, q: string): boolean {
+  const title = item.metadata.title;
+  if (typeof title !== "string") return false;
+  return title.toLowerCase().includes(q);
+}
+
 function buildReasons(
   item: Item,
   facets: SearchFacets,
   linkedIds: Set<string>,
+  ftsHit: boolean,
 ): string[] {
   const reasons: string[] = [];
   const q = facets.query?.trim().toLowerCase();
 
+  if (ftsHit) {
+    reasons.push("Full-text match");
+  }
+
   if (q) {
     if (item.content.toLowerCase().includes(q)) {
       reasons.push("Content match");
+    }
+    if (meetingTitleMatch(item, q)) {
+      reasons.push("Title match");
     }
     if (item.type.toLowerCase().includes(q)) {
       reasons.push("Type match");
@@ -133,6 +148,7 @@ export async function searchWithFacets(
   const params: unknown[] = [];
   const conditions: string[] = [`type != 'work_block'`];
   const status = facets.status ?? "active";
+  const queryTrim = facets.query?.trim() ?? "";
 
   if (status !== "all") {
     conditions.push(statusCondition(status));
@@ -165,12 +181,23 @@ export async function searchWithFacets(
     params.push(`${facets.dateTo}T23:59:59.999Z`);
   }
 
-  if (facets.query?.trim()) {
-    const idx = params.length + 1;
-    conditions.push(
-      `(content LIKE $${idx} OR tags LIKE $${idx} OR type LIKE $${idx})`,
-    );
-    params.push(`%${facets.query.trim()}%`);
+  let ftsIds: string[] = [];
+  let usedFts = false;
+  if (queryTrim) {
+    ftsIds = await ftsSearchItemIds(queryTrim);
+    if (ftsIds.length > 0) {
+      usedFts = true;
+      const idx = params.length + 1;
+      const placeholders = ftsIds.map((_, i) => `$${idx + i}`).join(", ");
+      conditions.push(`id IN (${placeholders})`);
+      params.push(...ftsIds);
+    } else {
+      const idx = params.length + 1;
+      conditions.push(
+        `(content LIKE $${idx} OR tags LIKE $${idx} OR type LIKE $${idx} OR json_extract(metadata, '$.title') LIKE $${idx})`,
+      );
+      params.push(`%${queryTrim}%`);
+    }
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -186,24 +213,32 @@ export async function searchWithFacets(
 
   let items = rows.map(rowToItem);
 
+  if (usedFts && ftsIds.length > 0) {
+    const order = new Map(ftsIds.map((id, i) => [id, i]));
+    items.sort(
+      (a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999),
+    );
+  }
+
   if (facets.dueSoon) {
     items = items.filter((item) => isDueSoon(item));
   }
 
   let linkedNeighborIds = new Set<string>();
   if (facets.linkedToId) {
-    const links = await getLinksForItem(facets.linkedToId);
-    linkedNeighborIds = new Set(
-      links.flatMap((l) =>
-        l.from_id === facets.linkedToId ? [l.to_id] : [l.from_id],
-      ),
-    );
-    linkedNeighborIds.add(facets.linkedToId);
+    linkedNeighborIds = await getGraphNeighborhoodIds(facets.linkedToId);
     items = items.filter((item) => linkedNeighborIds.has(item.id));
   }
 
+  const ftsSet = new Set(ftsIds);
+
   return items.map((item) => ({
     item,
-    reasons: buildReasons(item, facets, linkedNeighborIds),
+    reasons: buildReasons(
+      item,
+      facets,
+      linkedNeighborIds,
+      ftsSet.has(item.id),
+    ),
   }));
 }

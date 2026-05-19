@@ -52,6 +52,7 @@ function parseLlmJson(content: string): ParsedAction[] {
     text: row.text.trim(),
     owner: row.owner?.trim() || null,
     due_date: row.due_date?.trim() || null,
+    project_id: null,
   }));
 }
 
@@ -134,7 +135,7 @@ export async function refineMeetingNotes(
 ): Promise<ParsedAction[]> {
   const resolved = settings ?? loadLlmSettings();
   if (!resolved.enabled) {
-    return parseMeetingNotes(text);
+    return parseMeetingNotes(text).actions;
   }
 
   try {
@@ -143,6 +144,6 @@ export async function refineMeetingNotes(
     }
     return await callOllama(text, resolved);
   } catch {
-    return parseMeetingNotes(text);
+    return parseMeetingNotes(text).actions;
   }
 }

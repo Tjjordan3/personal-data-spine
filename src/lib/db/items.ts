@@ -1,4 +1,5 @@
 import { getDatabase } from "./database";
+import { deleteFtsRow, upsertFtsRow } from "./fts";
 import { deleteLinksForItem, linkMeetingTask } from "./links";
 import type { ItemStatus } from "./itemStatus";
 import type { Item, ItemType, NewItem } from "./types";
@@ -45,7 +46,7 @@ export async function insertItem(item: NewItem): Promise<Item> {
     [id, item.type, item.content, tags, created_at, item.source, metadata],
   );
 
-  return {
+  const saved: Item = {
     id,
     type: item.type,
     content: item.content,
@@ -54,6 +55,10 @@ export async function insertItem(item: NewItem): Promise<Item> {
     source: item.source,
     metadata: item.metadata ?? {},
   };
+  if (item.type !== "work_block") {
+    await upsertFtsRow(db, saved);
+  }
+  return saved;
 }
 
 function statusCondition(status: ItemStatus | "all"): string {
@@ -77,6 +82,7 @@ export async function getItemById(id: string): Promise<Item | null> {
 export async function deleteItem(id: string): Promise<void> {
   const db = await getDatabase();
   await deleteLinksForItem(id);
+  await deleteFtsRow(db, id);
   await db.execute("DELETE FROM items WHERE id = $1", [id]);
 }
 
@@ -123,6 +129,10 @@ export async function updateItem(
   if (!updated) {
     throw new Error("Item not found after update");
   }
+  if (updated.type !== "work_block") {
+    const db = await getDatabase();
+    await upsertFtsRow(db, updated);
+  }
   return updated;
 }
 
@@ -151,7 +161,24 @@ export async function setItemStatus(
     id,
   ]);
 
-  return { ...item, metadata };
+  const updated = { ...item, metadata };
+  if (item.type !== "work_block") {
+    await upsertFtsRow(db, updated);
+  }
+  return updated;
+}
+
+export async function markItemsDone(ids: string[]): Promise<number> {
+  let count = 0;
+  for (const id of ids) {
+    const item = await getItemById(id);
+    if (!item) continue;
+    const status = item.metadata.status as string | undefined;
+    if (status === "done" || status === "archived") continue;
+    await setItemStatus(id, "done");
+    count += 1;
+  }
+  return count;
 }
 
 export async function listItems(options?: {
@@ -238,9 +265,18 @@ export async function saveMeetingWithTasks(
     content: string;
     owner: string | null;
     due_date: string | null;
+    project_id?: string | null;
   }>,
-  options?: { title?: string | null },
+  options?: {
+    title?: string | null;
+    decisions?: string[];
+  },
 ): Promise<{ meeting: Item; tasks: Item[] }> {
+  const notes = meetingContent.trim();
+  if (!notes) {
+    throw new Error("Meeting notes are required.");
+  }
+
   const normalizedTasks = tasks
     .map((t) => ({
       ...t,
@@ -248,9 +284,9 @@ export async function saveMeetingWithTasks(
     }))
     .filter((t) => t.content.length > 0);
 
-  if (normalizedTasks.length === 0) {
-    throw new Error("Add at least one action with text before saving.");
-  }
+  const decisions = (options?.decisions ?? [])
+    .map((d) => d.trim())
+    .filter(Boolean);
 
   const meetingId = crypto.randomUUID();
   const parsed_at = new Date().toISOString();
@@ -266,6 +302,7 @@ export async function saveMeetingWithTasks(
       title,
       parsed_at,
       task_count: normalizedTasks.length,
+      ...(decisions.length > 0 ? { decisions } : {}),
     },
   });
 
@@ -280,6 +317,7 @@ export async function saveMeetingWithTasks(
         meeting_id: meetingId,
         owner: task.owner?.trim() || null,
         due_date: task.due_date?.trim() || null,
+        project_id: task.project_id?.trim() || null,
       },
     });
     try {

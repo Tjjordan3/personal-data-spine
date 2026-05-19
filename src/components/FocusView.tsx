@@ -11,6 +11,7 @@ import {
 import { FocusTimerBar } from "./FocusTimerBar";
 import { FocusTimerShortcuts } from "./FocusTimerShortcuts";
 import { FocusTaskActions } from "./FocusTaskActions";
+import { EmptyState } from "./EmptyState";
 import { useFocusTimer } from "./FocusTimerContext";
 
 interface FocusViewProps {
@@ -156,12 +157,11 @@ function FocusViewBody({
         )}
 
         {!loading && !error && entries.length === 0 && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-12 text-center">
-            <p className="max-w-sm text-sm text-pds-muted">
-              Nothing urgent right now. Capture a task, subscription, or project
-              to see it here.
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
+          <EmptyState
+            title="All clear for now"
+            description="Nothing urgent in your focus stream. Capture a task or start a timer when you're ready."
+          >
+            <>
               <button
                 type="button"
                 onClick={() => onQuickCreate("task")}
@@ -190,8 +190,8 @@ function FocusViewBody({
               >
                 Quick capture
               </button>
-            </div>
-          </div>
+            </>
+          </EmptyState>
         )}
 
         {!loading && entries.length > 0 && (

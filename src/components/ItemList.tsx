@@ -16,6 +16,7 @@ import {
 import { getCategoryById } from "../lib/subscriptions/catalog";
 import { meetingBodyPreview, meetingTitle } from "../lib/meeting/display";
 import type { Item, ItemType, ProjectMetadata } from "../lib/db/types";
+import { EmptyState } from "./EmptyState";
 
 interface ItemListProps {
   results: SearchResult[];
@@ -159,10 +160,14 @@ export function ItemList({
 
   if (results.length === 0) {
     return (
-      <p className="px-4 py-8 text-sm text-pds-muted">
-        {emptyMessage ??
-          "No items in this view. Use Alt+Shift+Space to quick-capture."}
-      </p>
+      <EmptyState
+        title="Nothing here"
+        description={
+          emptyMessage ??
+          "No items match your filters. Use Alt+Shift+Space to quick-capture a note."
+        }
+        className="py-8"
+      />
     );
   }
 

@@ -3,4 +3,5 @@ export interface ParsedAction {
   text: string;
   owner: string | null;
   due_date: string | null;
+  project_id: string | null;
 }

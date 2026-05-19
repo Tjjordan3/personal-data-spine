@@ -1,7 +1,21 @@
 import type Database from "@tauri-apps/plugin-sql";
 import { getDatabase } from "./database";
+import { rebuildFtsIndex } from "./fts";
 
 let v2SchemaReady: Promise<void> | null = null;
+
+async function ensureFtsSchema(db: Database): Promise<void> {
+  await db.execute(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
+      item_id UNINDEXED,
+      content,
+      tags,
+      title,
+      tokenize = 'porter unicode61'
+    );
+  `);
+  await rebuildFtsIndex(db);
+}
 
 async function backfillMeetingLinks(db: Database): Promise<void> {
   await db.execute(`
@@ -69,6 +83,7 @@ export async function ensureCoreSchema(existing?: Database): Promise<void> {
         "CREATE INDEX IF NOT EXISTS idx_item_links_to ON item_links(to_id)",
       );
       await backfillMeetingLinks(db);
+      await ensureFtsSchema(db);
     })();
   }
   return v2SchemaReady;

@@ -9,6 +9,7 @@ import { getItemById } from "../lib/db/items";
 import { totalFocusMinutesForTask } from "../lib/db/workBlocks";
 import type { Item } from "../lib/db/types";
 import { ItemEditForm } from "./ItemEditForm";
+import { LinkPickerModal } from "./LinkPickerModal";
 import { TaskFocusStartButton } from "./TaskFocusStartButton";
 
 interface RelatedPanelProps {
@@ -33,8 +34,8 @@ export function RelatedPanel({
   const [related, setRelated] = useState<
     Awaited<ReturnType<typeof getRelatedItems>>
   >([]);
-  const [linkTargetId, setLinkTargetId] = useState("");
   const [linkType, setLinkType] = useState<LinkType>("related");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focusMinutes, setFocusMinutes] = useState<number | null>(null);
 
@@ -63,20 +64,20 @@ export function RelatedPanel({
     void totalFocusMinutesForTask(item.id).then(setFocusMinutes);
   }, [item]);
 
-  async function handleAddLink() {
-    if (!item || !linkTargetId.trim()) return;
+  async function handlePickTarget(targetId: string) {
+    if (!item) return;
     try {
-      const target = await getItemById(linkTargetId.trim());
+      const target = await getItemById(targetId);
       if (!target) {
-        onToast("Target item ID not found.", "error");
+        onToast("Target item not found.", "error");
         return;
       }
       await createLink(item.id, target.id, linkType);
       if (linkType === "related") {
         await createLink(target.id, item.id, "related");
       }
-      setLinkTargetId("");
-      onToast("Link created (bidirectional related).", "success");
+      setPickerOpen(false);
+      onToast("Link created.", "success");
       onChanged();
       void refresh();
     } catch (err) {
@@ -112,6 +113,13 @@ export function RelatedPanel({
 
   return (
     <aside className="flex w-72 shrink-0 flex-col border-l border-pds-border">
+      <LinkPickerModal
+        open={pickerOpen}
+        sourceItem={item}
+        linkType={linkType}
+        onClose={() => setPickerOpen(false)}
+        onPick={handlePickTarget}
+      />
       <div className="border-b border-pds-border p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -140,12 +148,6 @@ export function RelatedPanel({
         </div>
       )}
       <div className="space-y-2 border-b border-pds-border p-3">
-        <input
-          value={linkTargetId}
-          onChange={(e) => setLinkTargetId(e.target.value)}
-          placeholder="Paste item ID to link"
-          className="w-full rounded border border-pds-border bg-pds-input px-2 py-1 text-[11px] text-pds-text"
-        />
         <select
           value={linkType}
           onChange={(e) => setLinkType(e.target.value as LinkType)}
@@ -159,10 +161,10 @@ export function RelatedPanel({
         </select>
         <button
           type="button"
-          onClick={() => void handleAddLink()}
-          className="w-full rounded bg-zinc-100 py-1 text-[11px] font-medium text-zinc-900"
+          onClick={() => setPickerOpen(true)}
+          className="w-full rounded bg-pds-accent py-1 text-[11px] font-medium text-pds-accent-fg"
         >
-          Add link
+          Find item to link…
         </button>
       </div>
       <div className="min-h-0 flex-1 overflow-auto p-2">

@@ -23,7 +23,7 @@ import {
 } from "./components/CommandPalette";
 import { ThemeToggle } from "./components/ThemeToggle";
 import type { ItemType } from "./lib/db/types";
-import { getItemById } from "./lib/db/items";
+import { getItemById, markItemsDone } from "./lib/db/items";
 import { searchWithFacets, type SearchResult } from "./lib/db/search";
 import type { Item } from "./lib/db/types";
 
@@ -86,6 +86,8 @@ export default function App() {
   const [projectsFocusId, setProjectsFocusId] = useState<string | null>(null);
   const [focusStatsTick, setFocusStatsTick] = useState(0);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [linkedToSelection, setLinkedToSelection] = useState(false);
+  const [batchBusy, setBatchBusy] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useCommandPaletteShortcut(() => setCommandPaletteOpen(true));
@@ -110,6 +112,8 @@ export default function App() {
         dateFrom: facets.dateFrom || undefined,
         dateTo: facets.dateTo || undefined,
         dueSoon: facets.dueSoon,
+        linkedToId:
+          linkedToSelection && selectedId ? selectedId : undefined,
       });
       setResults(data);
       if (selectedId) {
@@ -121,7 +125,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [facets, selectedId]);
+  }, [facets, selectedId, linkedToSelection]);
 
   useEffect(() => {
     if (view === "inbox") void refresh();
@@ -178,6 +182,37 @@ export default function App() {
 
   function patchFacets(patch: Partial<FacetState>) {
     setFacets((prev) => ({ ...prev, ...patch }));
+  }
+
+  async function handleMarkVisibleDone() {
+    const activeIds = results
+      .map((r) => r.item)
+      .filter((i) => {
+        const s = i.metadata.status as string | undefined;
+        return !s || s === "active";
+      })
+      .map((i) => i.id);
+    if (activeIds.length === 0) {
+      showToast("No active items in this view.", "error");
+      return;
+    }
+    const ok = window.confirm(
+      `Mark ${activeIds.length} visible item(s) as done?`,
+    );
+    if (!ok) return;
+    setBatchBusy(true);
+    try {
+      const count = await markItemsDone(activeIds);
+      showToast(`Marked ${count} item(s) as done.`, "success");
+      void refresh();
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Batch update failed",
+        "error",
+      );
+    } finally {
+      setBatchBusy(false);
+    }
   }
 
   const quickCreateType: ItemType | null =
@@ -293,7 +328,7 @@ export default function App() {
               onToast={showToast}
             />
           )}
-          <div className="flex items-center gap-2 border-b border-pds-border px-4 py-2">
+          <div className="flex flex-wrap items-center gap-2 border-b border-pds-border px-4 py-2">
             <button
               type="button"
               onClick={() => setShowGraph((v) => !v)}
@@ -305,11 +340,31 @@ export default function App() {
             >
               {showGraph ? "Hide graph" : "Show graph"}
             </button>
+            <button
+              type="button"
+              disabled={!selectedId}
+              onClick={() => setLinkedToSelection((v) => !v)}
+              className={`rounded px-2 py-0.5 text-[11px] disabled:opacity-40 ${
+                linkedToSelection
+                  ? "bg-violet-600 text-white"
+                  : "bg-pds-chip text-pds-chip-fg"
+              }`}
+            >
+              Linked to selection
+            </button>
+            <button
+              type="button"
+              disabled={batchBusy || results.length === 0}
+              onClick={() => void handleMarkVisibleDone()}
+              className="rounded px-2 py-0.5 text-[11px] bg-pds-chip text-pds-chip-fg disabled:opacity-40"
+            >
+              Mark visible done
+            </button>
             {selectedId && (
               <button
                 type="button"
                 onClick={() => {
-                  patchFacets({ query: "" });
+                  setLinkedToSelection(false);
                   setSelectedId(null);
                 }}
                 className="rounded px-2 py-0.5 text-[11px] bg-pds-chip text-pds-chip-fg"
@@ -348,6 +403,11 @@ export default function App() {
                 onChanged={() => void refresh()}
                 onToast={showToast}
                 onEdit={handleEditItem}
+                emptyMessage={
+                  linkedToSelection && selectedId
+                    ? "No items linked to the selection in this filter."
+                    : undefined
+                }
               />
             </main>
             <RelatedPanel
@@ -391,7 +451,10 @@ export default function App() {
       {view === "meeting" && (
         <main className="flex min-h-0 flex-1 overflow-hidden">
           <Suspense fallback={<DeferredRouteFallback />}>
-            <MeetingsView onToast={showToast} />
+            <MeetingsView
+              onToast={showToast}
+              onNavigateToFocus={() => setView("focus")}
+            />
           </Suspense>
         </main>
       )}

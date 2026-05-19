@@ -6,8 +6,10 @@ import {
   useState,
   type MouseEvent,
 } from "react";
-import { listItems } from "../lib/db/items";
+import { insertItem, listItems } from "../lib/db/items";
 import { searchWithFacets } from "../lib/db/search";
+import { NOTE_TEMPLATES } from "../lib/capture/templates";
+import { emit } from "@tauri-apps/api/event";
 import type { Item, ItemType } from "../lib/db/types";
 import { useFocusTimer } from "./FocusTimerContext";
 
@@ -122,6 +124,23 @@ export function CommandPalette({
         keywords: "create add note",
         run: () => actions.openInboxQuickCreate("note"),
       },
+      ...NOTE_TEMPLATES.map((t) => ({
+        id: `note-template-${t.id}`,
+        kind: "action" as const,
+        label: `New note: ${t.label}`,
+        keywords: `template note ${t.label}`,
+        run: async () => {
+          const saved = await insertItem({
+            type: "note",
+            content: t.body,
+            tags: ["#note"],
+            source: "command-palette-template",
+            metadata: { template: t.id },
+          });
+          await emit("item:saved", {});
+          actions.openInboxWithSelection(saved.id);
+        },
+      })),
       {
         id: "go-focus",
         kind: "navigate",

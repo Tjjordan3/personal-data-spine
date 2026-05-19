@@ -1,18 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { emit } from "@tauri-apps/api/event";
 import { saveMeetingWithTasks } from "../lib/db/items";
+import { listActiveProjectsForPicker } from "../lib/db/projects";
 import { parseMeetingNotes } from "../lib/meeting/heuristicParser";
+import { MEETING_TEMPLATES } from "../lib/meeting/templates";
 import {
   loadLlmSettings,
   refineMeetingNotes,
   type LlmSettings,
 } from "../lib/meeting/llmRefiner";
 import type { ParsedAction } from "../lib/meeting/types";
+import type { Item } from "../lib/db/types";
 
 interface MeetingModeProps {
   onSaved: (meetingId: string) => void;
   onError: (message: string) => void;
   onSuccess: (message: string) => void;
+}
+
+function isTextareaTarget(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof HTMLElement)) return false;
+  return target.tagName === "TEXTAREA";
 }
 
 export function MeetingMode({
@@ -23,18 +31,48 @@ export function MeetingMode({
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [actions, setActions] = useState<ParsedAction[]>([]);
+  const [decisions, setDecisions] = useState<string[]>([]);
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [llmSettings] = useState<LlmSettings>(() => loadLlmSettings());
+  const [projects, setProjects] = useState<Item[]>([]);
+
+  useEffect(() => {
+    void listActiveProjectsForPicker().then(setProjects);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        void handleParse();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        if (isTextareaTarget(event.target)) return;
+        event.preventDefault();
+        void handleSave();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  });
 
   async function handleParse() {
     if (!notes.trim()) return;
     setParsing(true);
     try {
       const parsed = parseMeetingNotes(notes);
-      setActions(parsed);
-      if (parsed.length === 0) {
-        onError("No action items detected. Try bullet lines or TODO:/ACTION: prefixes.");
+      setActions(parsed.actions);
+      setDecisions(parsed.decisions);
+      if (parsed.actions.length === 0 && parsed.decisions.length === 0) {
+        onError(
+          "No actions or decisions detected. Use bullets, TODO:, or DECISION: lines.",
+        );
+      } else if (parsed.decisions.length > 0 && parsed.actions.length === 0) {
+        onSuccess(
+          `Found ${parsed.decisions.length} decision(s). You can save notes only.`,
+        );
       }
     } finally {
       setParsing(false);
@@ -51,6 +89,7 @@ export function MeetingMode({
     try {
       const refined = await refineMeetingNotes(notes, llmSettings);
       setActions(refined);
+      setDecisions(parseMeetingNotes(notes).decisions);
       if (refined.length === 0) {
         onError("LLM returned no actions. Falling back may be needed.");
       } else {
@@ -65,10 +104,6 @@ export function MeetingMode({
 
   async function handleSave() {
     if (!notes.trim()) return;
-    if (actions.length === 0) {
-      onError("Parse meeting notes before saving.");
-      return;
-    }
     setSaving(true);
     try {
       const result = await saveMeetingWithTasks(
@@ -77,16 +112,20 @@ export function MeetingMode({
           content: a.text,
           owner: a.owner,
           due_date: a.due_date,
+          project_id: a.project_id,
         })),
-        { title: title.trim() || null },
+        { title: title.trim() || null, decisions },
       );
       await emit("item:saved", {});
-      onSuccess(
-        `Saved “${title.trim() || "meeting"}” with ${result.tasks.length} task(s).`,
-      );
+      const taskPart =
+        result.tasks.length > 0
+          ? ` with ${result.tasks.length} task(s)`
+          : " (notes only)";
+      onSuccess(`Saved “${title.trim() || "meeting"}”${taskPart}.`);
       setTitle("");
       setNotes("");
       setActions([]);
+      setDecisions([]);
       onSaved(result.meeting.id);
     } catch (err) {
       const message =
@@ -99,6 +138,14 @@ export function MeetingMode({
     } finally {
       setSaving(false);
     }
+  }
+
+  function applyTemplate(templateId: string) {
+    const template = MEETING_TEMPLATES.find((t) => t.id === templateId);
+    if (!template) return;
+    setNotes(template.body);
+    setActions([]);
+    setDecisions([]);
   }
 
   function updateAction(id: string, patch: Partial<ParsedAction>) {
@@ -119,12 +166,31 @@ export function MeetingMode({
         text: "",
         owner: null,
         due_date: null,
+        project_id: null,
       },
     ]);
   }
 
+  const canSave = notes.trim().length > 0 && !saving;
+
   return (
     <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[10px] text-pds-muted">Template:</span>
+        {MEETING_TEMPLATES.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => applyTemplate(t.id)}
+            className="rounded border border-pds-border px-2 py-0.5 text-[10px] text-pds-muted hover:bg-pds-chip"
+          >
+            {t.label}
+          </button>
+        ))}
+        <span className="ml-auto text-[10px] text-pds-subtle">
+          Ctrl+Enter parse · Ctrl+S save
+        </span>
+      </div>
       <label className="block text-[11px] text-pds-muted">
         Title (optional)
         <input
@@ -138,9 +204,22 @@ export function MeetingMode({
       <textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="Paste meeting notes… Use bullets, TODO:, or ACTION: lines."
+        placeholder="Paste meeting notes… Use bullets, TODO:, DECISION:, or ACTION: lines."
         className="min-h-[180px] flex-1 resize-none rounded-lg border border-pds-border bg-pds-panel px-3 py-2 text-sm text-pds-text placeholder:text-pds-subtle focus:border-pds-muted focus:outline-none"
       />
+
+      {decisions.length > 0 && (
+        <div className="rounded-lg border border-pds-border bg-pds-panel/50 px-3 py-2">
+          <p className="text-[10px] font-medium uppercase text-pds-muted">
+            Decisions ({decisions.length})
+          </p>
+          <ul className="mt-1 list-inside list-disc text-[11px] text-pds-text">
+            {decisions.map((d) => (
+              <li key={d}>{d}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <button
@@ -167,10 +246,10 @@ export function MeetingMode({
         <button
           type="button"
           onClick={() => void handleSave()}
-          disabled={saving || actions.length === 0}
+          disabled={!canSave}
           className="rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
         >
-          {saving ? "Saving…" : "Save meeting + tasks"}
+          {saving ? "Saving…" : "Save meeting"}
         </button>
         <button
           type="button"
@@ -189,6 +268,7 @@ export function MeetingMode({
                 <th className="px-2 py-2 font-medium">Action</th>
                 <th className="w-28 px-2 py-2 font-medium">Owner</th>
                 <th className="w-32 px-2 py-2 font-medium">Due</th>
+                <th className="w-36 px-2 py-2 font-medium">Project</th>
                 <th className="w-10 px-2 py-2" />
               </tr>
             </thead>
@@ -227,6 +307,24 @@ export function MeetingMode({
                       className="w-full rounded border border-pds-border bg-pds-input px-2 py-1 text-pds-text"
                     />
                   </td>
+                  <td className="px-2 py-1.5">
+                    <select
+                      value={row.project_id ?? ""}
+                      onChange={(e) =>
+                        updateAction(row.id, {
+                          project_id: e.target.value || null,
+                        })
+                      }
+                      className="w-full rounded border border-pds-border bg-pds-input px-1 py-1 text-pds-text"
+                    >
+                      <option value="">—</option>
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.content.slice(0, 40)}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-2 py-1.5 text-center">
                     <button
                       type="button"
@@ -246,3 +344,4 @@ export function MeetingMode({
     </div>
   );
 }
+
