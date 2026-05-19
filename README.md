@@ -11,6 +11,23 @@
 - **v5 snapshot (frozen):** `../personal-data-spine-v5/` and [V5.md](V5.md)
 - **v6 scope (active):** [V6.md](V6.md)
 
+## v6 updates (current)
+
+- **Projects hub** — 3-column layout (list, detail, linked tasks) aligned with Meetings
+- **UI identity** — IBM Plex Sans, type scale, nav icons, milestone app icon, consistent emerald accents
+- **Graph view** — larger viewport, type icons on nodes, labels on focus/hover, optional “Show labels”
+- **Windows installer** — pre-built setup on [GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases) (`DonePath_*_x64-setup.exe`); see [RELEASING.md](RELEASING.md)
+- **Security & privacy** — local-only data, optional LLM; see [SECURITY.md](SECURITY.md)
+
+## Download (Windows)
+
+Pre-built installers are published on **[GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases)** (not stored in the git tree).
+
+- Download `DonePath_*_x64-setup.exe` and run it.
+- **Your data stays on your PC** — the installer does not include tasks or meetings from anyone else’s machine. Each user gets their own local database. Reinstalling on the same Windows user keeps existing data.
+- **Privacy:** optional meeting LLM sends note text to Ollama or OpenAI when you turn it on in Settings. The database is not encrypted at rest. See [SECURITY.md](SECURITY.md).
+- Build or publish yourself: [RELEASING.md](RELEASING.md).
+
 ## v4 features (shipped)
 
 - **Pomodoro timer** — Focus tab work/break blocks, streaks, chimes, start from task
@@ -34,13 +51,6 @@
 - **Quick create** — new note/meeting/task from inbox type filter
 - **Edit items** — content, tags, task owner/due/meeting link
 - All v1 features: capture, meeting parser, mark/archive/delete
-
-## Download (Windows)
-
-Pre-built installers are published on **[GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases)** (not stored in the git tree).
-
-- Download `DonePath_*_x64-setup.exe` and run it.
-- **Your data stays on your PC** — the installer does not include tasks or meetings from anyone else’s machine. Each user gets their own local database. Reinstalling on the same Windows user keeps existing data. See [RELEASING.md](RELEASING.md) for build and publish steps.
 
 ## Prerequisites
 

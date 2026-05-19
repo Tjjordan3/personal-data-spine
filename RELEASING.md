@@ -11,6 +11,8 @@
 
 Settings and some UI state live in WebView2 local storage for that app install — also per user, not in the installer.
 
+Broader security and privacy notes (LLM, encryption, backups): [SECURITY.md](SECURITY.md).
+
 ## What we ship on GitHub
 
 | Approach | Use |

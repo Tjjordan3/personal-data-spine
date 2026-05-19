@@ -304,6 +304,18 @@ export function SettingsPanel({
         <h3 className="text-xs font-medium uppercase tracking-wide text-pds-muted">
           LLM refinement
         </h3>
+        <p className="text-pds-caption leading-relaxed text-pds-muted">
+          Off by default. When enabled, <strong className="font-medium text-pds-text">meeting note text</strong> is sent to the provider you choose so it can suggest action items. Ollama usually stays on this PC; OpenAI sends notes to the cloud. API keys are stored locally on this device (not encrypted). See{" "}
+          <a
+            href="https://github.com/Tjjordan3/personal-data-spine/blob/main/SECURITY.md"
+            className="text-emerald-700 underline decoration-emerald-700/40 hover:text-emerald-600 dark:text-emerald-400"
+            target="_blank"
+            rel="noreferrer"
+          >
+            SECURITY.md
+          </a>{" "}
+          for details.
+        </p>
         <label className="flex items-center gap-2 text-xs text-pds-muted">
           <input
             type="checkbox"
