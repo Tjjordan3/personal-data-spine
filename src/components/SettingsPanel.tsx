@@ -237,7 +237,7 @@ export function SettingsPanel({
               }))
             }
           />
-          Windows toast when a renewal is due within 7 days
+          Desktop notification when a renewal is due within 7 days
         </label>
         <p className="text-[11px] text-pds-subtle">
           Local reminders only — no cloud. One toast per subscription per

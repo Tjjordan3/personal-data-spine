@@ -3,13 +3,14 @@
 ## Data and privacy
 
 - **Installers contain only the app** — not your tasks, meetings, or database.
-- **Data is stored per Windows user** on each machine, typically:
-  - `%APPDATA%\com.tjord.personal-data-spine\personal_spine.db`
-- **Reinstalling or upgrading** on the same PC keeps existing data (same app data folder).
+- **Data is stored per user** on each machine:
+  - **Windows:** `%APPDATA%\com.tjord.personal-data-spine\personal_spine.db`
+  - **macOS:** `~/Library/Application Support/com.tjord.personal-data-spine/personal_spine.db`
+- **Reinstalling or upgrading** on the same user account usually keeps existing data (same app data folder).
 - **Other people** who install from a release get an **empty** database unless they import a backup you gave them.
-- **Do not share** `personal_spine_backup.db` unless you intend to share that data.
+- **Do not share** backup files unless you intend to share that data.
 
-Settings and some UI state live in WebView2 local storage for that app install — also per user, not in the installer.
+Settings and some UI state live in the platform webview store for that app install — also per user, not in the installer.
 
 Broader security and privacy notes (LLM, encryption, backups): [SECURITY.md](SECURITY.md).
 
@@ -17,10 +18,10 @@ Broader security and privacy notes (LLM, encryption, backups): [SECURITY.md](SEC
 
 | Approach | Use |
 |----------|-----|
-| **GitHub Releases** (recommended) | Attach `DonePath_*_setup.exe` to a version tag. Source stays on `main`; binaries are release assets only. |
-| **Commit `.exe` on `main`** | Avoid — bloats git history; use Releases or CI artifacts instead. |
+| **GitHub Releases** (recommended) | Attach Windows `.exe` and macOS `.dmg` to an app-version tag. Source stays on `v7`; binaries are release assets only. |
+| **Commit installers on `v7`** | Avoid — bloats git history. |
 
-This repo uses a **GitHub Actions** workflow (`.github/workflows/release.yml`) to build the Windows installer when you push a tag like `v0.2.0`.
+The **Release** workflow (`.github/workflows/release.yml`) builds on **Windows** and **macOS** when you push a tag like `v0.3.1`.
 
 ## Version numbers
 
@@ -29,6 +30,7 @@ Keep these in sync before a release:
 - `package.json` → `"version"`
 - `src-tauri/tauri.conf.json` → `"version"`
 - `src-tauri/Cargo.toml` → `version`
+- `src-tauri/Cargo.lock` → `personal-data-spine` package version
 
 `productName` in `tauri.conf.json` is **DonePath** (installer filename prefix).
 
@@ -51,38 +53,78 @@ Outputs:
 
 Prerequisites: Node 18+, Rust, Visual Studio Build Tools with **Desktop development with C++**.
 
-Unsigned builds may trigger Windows SmartScreen; users can choose **More info → Run anyway** until you add code signing later.
+Unsigned builds may trigger Windows SmartScreen; users can choose **More info → Run anyway** until code signing is added.
+
+## Build locally (macOS)
+
+From the project root:
+
+```bash
+xcode-select --install   # if needed
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+npm install
+npm run tauri build -- --target universal-apple-darwin
+```
+
+Outputs:
+
+| Artifact | Path |
+|----------|------|
+| **DMG (share this)** | `src-tauri/target/universal-apple-darwin/release/bundle/dmg/DonePath_<version>_universal.dmg` |
+| **App bundle** | `src-tauri/target/universal-apple-darwin/release/bundle/macos/DonePath.app` |
+
+Prerequisites: Node 18+, Rust stable, Xcode Command Line Tools.
+
+Unsigned builds require **right-click → Open** the first time (Gatekeeper). See [docs/MACOS.md](docs/MACOS.md).
 
 ## Publish via GitHub Releases (automated)
 
-1. Commit and push source (workflow must be on the default branch).
-2. Create and push an **app version** tag matching `vMAJOR.MINOR.PATCH` (e.g. `v0.3.0`):
+1. Commit and push source on `v7`.
+2. Create and push an **app version** tag matching `vMAJOR.MINOR.PATCH` (e.g. `v0.3.1`):
 
-   ```powershell
-   git tag v0.3.0
-   git push origin v0.3.0
+   ```bash
+   git tag v0.3.1
+   git push origin v0.3.1
    ```
 
-   **Milestone tags** (`v5.0.0`, `v6.0.0`) mark frozen scope in git; they do **not** run this workflow (no installer build).
+   **Milestone tags** (`v5.0.0`, `v6.0.0`) mark frozen scope in git; they do **not** run this workflow.
 
-3. The **Release** workflow builds on `windows-latest` and uploads the NSIS (and MSI) assets to a new GitHub Release for that tag.
+3. The **Release** workflow runs in parallel on `windows-latest` and `macos-latest` (universal binary) and attaches assets to one GitHub Release.
 
-`package-lock.json` must be committed and in sync with `package.json` (CI runs `npm ci`). If a tagged release fails, fix the workflow or lockfile on `v7`, push, then re-push the tag (see below) or run **Actions → Release → Run workflow**.
+`package-lock.json` must be committed and in sync with `package.json` (CI runs `npm ci`). If a tagged release fails, fix the workflow on `v7`, push, delete and re-push the tag, or run **Actions → Release → Run workflow**.
 
 ### Changelog on the Releases page
 
-When an app-version tag is pushed, `tauri-action` prepends the install blurb above and appends **GitHub-generated release notes** (`generateReleaseNotes: true`). You can still edit the release text on GitHub after publish.
+`tauri-action` prepends the install blurb and appends **GitHub-generated release notes** (`generateReleaseNotes: true`).
 
-Day-to-day PR validation uses **CI** (`.github/workflows/ci.yml`): `npm run build` and `npm test` on Ubuntu — no Tauri/Rust on every PR.
+Day-to-day PR validation uses **CI** (`.github/workflows/ci.yml`): `npm run build` and `npm test` on Ubuntu — no full Tauri build on every PR.
+
+## macOS code signing and notarization (Phase 2 — optional)
+
+Phase 1 ships **unsigned** universal `.dmg` files (same trust model as unsigned Windows builds).
+
+When you want normal double-click install without Gatekeeper warnings:
+
+1. Enroll in the [Apple Developer Program](https://developer.apple.com/programs/).
+2. Create a **Developer ID Application** certificate in Xcode or Apple Developer portal.
+3. Add GitHub Actions secrets (names vary by setup; typical set):
+   - `APPLE_CERTIFICATE` (base64 `.p12`)
+   - `APPLE_CERTIFICATE_PASSWORD`
+   - `APPLE_SIGNING_IDENTITY`
+   - `APPLE_ID`, `APPLE_PASSWORD` (app-specific password), `APPLE_TEAM_ID`
+4. Extend the macOS job in `release.yml` with Tauri signing env vars and `notarytool submit` + staple per [Tauri macOS signing](https://v2.tauri.app/distribute/sign/macos/).
+5. Update [SECURITY.md](SECURITY.md) and [docs/MACOS.md](docs/MACOS.md) to remove unsigned first-run steps.
+
+Until then, document Gatekeeper bypass for users (see README and MACOS.md).
 
 ## Publish manually (one-off)
 
-1. Run `npm run tauri build` locally.
-2. On GitHub: **Releases → Draft a new release** → choose or create tag `v0.2.0`.
-3. Upload `DonePath_0.2.0_x64-setup.exe` from `bundle\nsis\`.
+1. Run `npm run tauri build` locally (Windows) or `npm run tauri build -- --target universal-apple-darwin` (macOS).
+2. On GitHub: **Releases → Draft a new release** → tag `v0.3.1`.
+3. Upload `DonePath_*_x64-setup.exe` and/or `DonePath_*_universal.dmg`.
 4. Add release notes; publish.
 
 ## After users install
 
 - They get a fresh local database on first run.
-- Export/import backups from **Settings → Backup & data** if they move machines.
+- Export/import backups from **Settings → Backup & data** to move between machines (Windows ↔ macOS supported via backup files).

@@ -6,7 +6,7 @@ DonePath is a **local-first** desktop app. It does not provide cloud sync, accou
 
 | Topic | DonePath behavior |
 |--------|-------------------|
-| **Your data** | Stored in SQLite on your PC (`%APPDATA%\com.tjord.personal-data-spine\personal_spine.db`) |
+| **Your data** | Stored in SQLite on your device (Windows: `%APPDATA%\com.tjord.personal-data-spine\personal_spine.db`; macOS: `~/Library/Application Support/com.tjord.personal-data-spine/personal_spine.db`) |
 | **Installers** | Contain the app only — **not** your tasks, meetings, or database |
 | **Internet** | No telemetry; optional LLM and font loading (see below) |
 | **Encryption** | Database is **not** encrypted at rest |
@@ -16,9 +16,9 @@ DonePath is a **local-first** desktop app. It does not provide cloud sync, accou
 
 **Low risk from strangers on the internet** — there is no DonePath server receiving your items.
 
-**Higher risk from local access** — anyone (or any malware) that can read your Windows user profile or backup files can read your data. Use **device encryption** (e.g. BitLocker) and a strong Windows login for sensitive content.
+**Higher risk from local access** — anyone (or any malware) that can read your user profile or backup files can read your data. Use **device encryption** (e.g. BitLocker or FileVault) and a strong login for sensitive content.
 
-**Installer trust** — download releases only from the official [GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases) page. Unsigned builds may show Windows SmartScreen until the app is code-signed.
+**Installer trust** — download releases only from the official [GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases) page. Unsigned Windows builds may show SmartScreen (**More info → Run anyway**). Unsigned macOS builds may be blocked by Gatekeeper (**right-click → Open** or **Privacy & Security → Open Anyway**) until the app is signed and notarized.
 
 ## Data on disk
 

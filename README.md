@@ -6,7 +6,7 @@
 
 | Milestone | Archive | App version | GitHub tag |
 |-----------|---------|-------------|------------|
-| **v7 (active)** | branch **`v7`** · [V7.md](V7.md) | **0.3.0** | [`v0.3.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.3.0) (installer) |
+| **v7 (active)** | branch **`v7`** · [V7.md](V7.md) | **0.3.1** | [`v0.3.1`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.3.1) (installers) |
 | v6 (frozen) | `../personal-data-spine-v6/` · [V6.md](V6.md) | 0.2.0 | [`v6.0.0`](https://github.com/Tjjordan3/personal-data-spine/tree/v6.0.0) (milestone) · [`v0.2.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.2.0) (installer) |
 | v5 (frozen) | `../personal-data-spine-v5/` · [V5.md](V5.md) | — | [`v5.0.0`](https://github.com/Tjjordan3/personal-data-spine/tree/v5.0.0) (milestone) |
 | v4 (frozen) | `../personal-data-spine-v4/` · [V4.md](V4.md) | — | `v4.0.0` (milestone, local tag) |
@@ -18,16 +18,17 @@
 
 - **Active development** uses a single git branch: **`v7`** (GitHub default branch).
 - **Frozen milestones** are preserved with **git tags** (e.g. `v6.0.0`, `v5.0.0`) and **sibling snapshot folders** on disk (`../personal-data-spine-v6/`, etc.), not long-lived `v4`/`v5`/`v6` branches.
-- **Installers** ship on **app version** tags (`v0.2.0`, `v0.3.0`) via [RELEASING.md](RELEASING.md). **Milestone** tags (`v6.0.0`, `v5.0.0`) freeze scope in git only — they do not run the Release workflow.
+- **Installers** ship on **app version** tags (`v0.2.0`, `v0.3.1`, …) via [RELEASING.md](RELEASING.md) — **Windows** `.exe` and **macOS** universal `.dmg`. **Milestone** tags (`v6.0.0`, `v5.0.0`) freeze scope only — they do not run the Release workflow.
 - Older milestone branches were removed from GitHub to reduce clutter; history remains in `v7` and at the tagged commits.
 
-## v7 updates (app **0.3.0**, tag **v0.3.0**)
+## v7 updates (app **0.3.1**, tag **v0.3.1**)
 
-Shipped in v7.0 (see [V7.md](V7.md) for backlog and v7.1 plans):
+Shipped in v7.0+ (see [V7.md](V7.md) for backlog and v7.1 plans):
 
 - **Link suggestions** — confirm before linking after meeting save; no silent graph links
 - **Focus spine** — project/meeting context on task rows; one click to open linked hub
 - **LLM firewall** — documented opt-in, local-by-default, Meetings-only rule ([SECURITY.md](SECURITY.md), Settings)
+- **macOS distribution** — universal `.dmg` on GitHub Releases ([docs/MACOS.md](docs/MACOS.md)); same codebase as Windows
 
 **Planned (v7.1):** persist graph show/hide + neighborhood scope; weekly rollup of completed tasks with outcomes.
 
@@ -37,7 +38,7 @@ Shipped in v7.0 (see [V7.md](V7.md) for backlog and v7.1 plans):
 
 - **Projects hub** — 3-column layout (list, detail, linked tasks); sidebar task edit; add task to project; new project; project compose template; related-items panel and cross-links to Subscriptions/Inbox
 - **Subscriptions hub** — 3-column layout; catalog picker; renewal detail in center
-- **Renewal reminders** — local Windows toasts (7-day window, Settings toggle, deduped per day)
+- **Renewal reminders** — local desktop notifications (7-day window, Settings toggle, deduped per day)
 
 ### Daily flow & capture
 
@@ -59,7 +60,7 @@ Shipped in v7.0 (see [V7.md](V7.md) for backlog and v7.1 plans):
 
 - **UI identity** — IBM Plex Sans, type scale, nav icons, milestone app icon, emerald accents
 - **Graph view** — larger viewport, type icons, legend, labels on focus/hover
-- **Windows installer** — GitHub Actions + [RELEASING.md](RELEASING.md); assets on Releases (not in git)
+- **Installers** — GitHub Actions + [RELEASING.md](RELEASING.md); Windows `.exe` and macOS `.dmg` on Releases (not in git)
 - **Security docs** — [SECURITY.md](SECURITY.md); LLM privacy blurb in Settings
 
 ## v5 features (milestone **v5.0.0**)
@@ -72,15 +73,27 @@ Shipped in v7.0 (see [V7.md](V7.md) for backlog and v7.1 plans):
 - **Capture templates** — meeting + note templates; shortcuts in Settings
 - **Polish** — empty states, mark visible done, FTS performance
 
-## Download (Windows)
+## Download
 
-Pre-built installers are published on **[GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases)** (not stored in the git tree).
+Pre-built installers are on **[GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases)** (not in the git tree).
 
-- **Latest:** [`DonePath_0.3.0_x64-setup.exe`](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.0`)
+### Windows
+
+- **Latest:** [`DonePath_0.3.1_x64-setup.exe`](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.1`)
 - Older: `DonePath_0.2.0_x64-setup.exe` (`v0.2.0`)
-- **Your data stays on your PC** — the installer does not include tasks or meetings from anyone else’s machine. Each user gets their own local database. Reinstalling on the same Windows user keeps existing data.
-- **Privacy:** optional meeting LLM sends note text to Ollama or OpenAI when you turn it on in Settings. The database is not encrypted at rest. See [SECURITY.md](SECURITY.md).
-- Build or publish yourself: [RELEASING.md](RELEASING.md).
+- SmartScreen may warn on unsigned builds → **More info → Run anyway**
+
+### macOS (Apple Silicon + Intel)
+
+- **Latest:** `DonePath_0.3.1_universal.dmg` on [Releases](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.1`)
+- First launch: **right-click → Open**, or **System Settings → Privacy & Security → Open Anyway** (unsigned build)
+- First-run guide: [docs/MACOS.md](docs/MACOS.md)
+
+### All platforms
+
+- **Your data stays on your device** — installers do not include anyone else’s tasks or meetings. Each user gets a local database. Reinstalling on the same user account usually keeps data.
+- **Privacy:** optional meeting LLM sends note text to Ollama or OpenAI when enabled in Settings. The database is not encrypted at rest. See [SECURITY.md](SECURITY.md).
+- Build yourself: [RELEASING.md](RELEASING.md).
 
 ## v4 features (milestone **v4.0.0**)
 
@@ -111,15 +124,16 @@ Pre-built installers are published on **[GitHub Releases](https://github.com/Tjj
 - [Node.js](https://nodejs.org/) 18+
 - [Rust](https://rustup.rs/)
 - **Windows:** [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with “Desktop development with C++”
+- **macOS:** Xcode Command Line Tools (`xcode-select --install`)
 
 ## Development
 
 | | |
 |--|--|
-| **App version** | `0.3.0` (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) |
+| **App version** | `0.3.1` (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) |
 | **Active branch** | `v7` |
-| **Local DB** | `%APPDATA%\com.tjord.personal-data-spine\personal_spine.db` |
-| **Publish installer** | Tag `v*` (e.g. `v0.3.0`) → [RELEASING.md](RELEASING.md) |
+| **Local DB** | Win: `%APPDATA%\com.tjord.personal-data-spine\personal_spine.db` · Mac: `~/Library/Application Support/com.tjord.personal-data-spine/personal_spine.db` |
+| **Publish installer** | Tag `v0.x.y` → [RELEASING.md](RELEASING.md) (Windows + macOS) |
 
 From the **project root** (this folder):
 
@@ -133,7 +147,7 @@ npm run tauri dev
 ```bash
 npm run build    # typecheck + Vite
 npm test         # Vitest (e.g. meeting heuristic parser)
-npm run tauri build   # Windows installer under src-tauri/target/release/bundle/
+npm run tauri build   # Windows: bundle/ · macOS: --target universal-apple-darwin (see RELEASING.md)
 ```
 
 ### Dev window blank or `tauri dev` exits immediately
@@ -150,7 +164,7 @@ If you previously saw **"migration 1 was previously applied but has been modifie
 
 | Action | Keys |
 |--------|------|
-| Quick capture | Alt+Shift+Space |
+| Quick capture | Alt+Shift+Space (macOS: ⌥⇧Space or ⌘⇧Space fallback) |
 | Save capture (stay open) | Enter |
 | Undo last capture | Ctrl+Z |
 | Close capture | Esc |
