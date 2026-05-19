@@ -4,11 +4,15 @@ First-run checklist for the universal `.dmg` from [GitHub Releases](https://gith
 
 ## Install (unsigned build)
 
-1. Download `DonePath_<version>_universal.dmg` from the release for your tag (e.g. `v0.3.1`).
+1. Download `DonePath_<version>_universal.dmg` from the release for your tag (e.g. `v0.3.2`).
 2. Open the DMG and drag **DonePath** to Applications (or run from the mounted volume).
 3. First launch: macOS may block the app. Use **right-click → Open**, or **System Settings → Privacy & Security → Open Anyway**.
 
 After you trust the app once, normal double-click works until you download a new unsigned build.
+
+### App won’t open from the icon (fixed in v0.3.2+)
+
+On **v0.3.1** and earlier, double-click could fail while the app still ran if you started `Contents/MacOS/personal-data-spine` by hand — the bundle expected `DonePath` as the executable name. **v0.3.2+** aligns the binary with `productName`. Upgrade from [Releases](https://github.com/Tjjordan3/personal-data-spine/releases/latest).
 
 ## Data location
 

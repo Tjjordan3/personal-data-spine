@@ -1,6 +1,6 @@
 [package]
 name = "personal-data-spine"
-version = "0.3.1"
+version = "0.3.2"
 description = "DonePath — local-first tasks, meetings, and focus on your computer"
 authors = ["you"]
 edition = "2021"
@@ -14,11 +14,17 @@ edition = "2021"
 name = "personal_data_spine_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# Must match tauri.conf.json productName ("DonePath") so macOS CFBundleExecutable
+# finds Contents/MacOS/DonePath when double-clicking the .app (see tauri#13874).
+[[bin]]
+name = "DonePath"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"

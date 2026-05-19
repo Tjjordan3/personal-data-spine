@@ -1,7 +1,7 @@
 {
   "name": "personal-data-spine",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DonePath — local-first tasks, meetings, and focus on your computer",
   "type": "module",
   "scripts": {
