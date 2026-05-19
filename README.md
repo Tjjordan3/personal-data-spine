@@ -18,7 +18,7 @@
 
 - **Active development** uses a single git branch: **`v7`** (GitHub default branch).
 - **Frozen milestones** are preserved with **git tags** (e.g. `v6.0.0`, `v5.0.0`) and **sibling snapshot folders** on disk (`../personal-data-spine-v6/`, etc.), not long-lived `v4`/`v5`/`v6` branches.
-- **Installers** ship on **`v*`** release tags (`v0.2.0`, `v0.3.0`) via [RELEASING.md](RELEASING.md); milestone tags mark scope freezes without replacing installer tags.
+- **Installers** ship on **app version** tags (`v0.2.0`, `v0.3.0`) via [RELEASING.md](RELEASING.md). **Milestone** tags (`v6.0.0`, `v5.0.0`) freeze scope in git only — they do not run the Release workflow.
 - Older milestone branches were removed from GitHub to reduce clutter; history remains in `v7` and at the tagged commits.
 
 ## v7 updates (app **0.3.0**, tag **v0.3.0**)

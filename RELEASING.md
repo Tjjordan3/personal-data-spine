@@ -56,12 +56,14 @@ Unsigned builds may trigger Windows SmartScreen; users can choose **More info â†
 ## Publish via GitHub Releases (automated)
 
 1. Commit and push source (workflow must be on the default branch).
-2. Create and push a tag matching `v*` (e.g. `v0.2.0`):
+2. Create and push an **app version** tag matching `vMAJOR.MINOR.PATCH` (e.g. `v0.3.0`):
 
    ```powershell
-   git tag v0.2.0
-   git push origin v0.2.0
+   git tag v0.3.0
+   git push origin v0.3.0
    ```
+
+   **Milestone tags** (`v5.0.0`, `v6.0.0`) mark frozen scope in git; they do **not** run this workflow (no installer build).
 
 3. The **Release** workflow builds on `windows-latest` and uploads the NSIS (and MSI) assets to a new GitHub Release for that tag.
 
@@ -69,12 +71,7 @@ Unsigned builds may trigger Windows SmartScreen; users can choose **More info â†
 
 ### Changelog on the Releases page
 
-When a `v*` tag is pushed, the **Release** workflow builds `release_body.md` before publishing:
-
-1. **Preferred:** `gh release generate-notes` (GitHubâ€™s auto-generated notes from merged PRs/commits since the previous tag).
-2. **Fallback:** `git log <previous-tag>..HEAD` as a bullet list of commit subjects.
-
-That file is passed to `tauri-action` as `releaseBodyPath`, so the GitHub Release description includes install instructions plus a **Release notes** or **Changes since â€¦** section. You can still edit the release text on GitHub after publish.
+When an app-version tag is pushed, `tauri-action` prepends the install blurb above and appends **GitHub-generated release notes** (`generateReleaseNotes: true`). You can still edit the release text on GitHub after publish.
 
 Day-to-day PR validation uses **CI** (`.github/workflows/ci.yml`): `npm run build` and `npm test` on Ubuntu â€” no Tauri/Rust on every PR.
 
