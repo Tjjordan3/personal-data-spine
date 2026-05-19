@@ -47,7 +47,7 @@ function playTone(
   osc.type = "sine";
   osc.frequency.setValueAtTime(frequency, startTime);
   gain.gain.setValueAtTime(0, startTime);
-  gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.02);
+  gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.03);
   gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
   osc.connect(gain);
   gain.connect(ctx.destination);
@@ -55,8 +55,26 @@ function playTone(
   osc.stop(startTime + duration + 0.05);
 }
 
+/** C5 → E5 → G5 (~1.35s), softer peaks with gaps between notes. */
+function playFocusCompleteChime(ctx: AudioContext, t: number): void {
+  const gain = 0.09;
+  const gap = 0.42;
+  playTone(ctx, 523.25, t, 0.38, gain);
+  playTone(ctx, 659.25, t + gap, 0.38, gain);
+  playTone(ctx, 783.99, t + gap * 2, 0.42, gain * 0.95);
+}
+
+/** G4 → E4 → C4 (~1.05s), lower and slower than focus. */
+function playBreakCompleteChime(ctx: AudioContext, t: number): void {
+  const gain = 0.09;
+  const gap = 0.38;
+  playTone(ctx, 392, t, 0.45, gain);
+  playTone(ctx, 329.63, t + gap, 0.48, gain * 0.92);
+  playTone(ctx, 261.63, t + gap * 2, 0.52, gain * 0.88);
+}
+
 /**
- * Short chime when a Pomodoro segment ends naturally.
+ * Chime when a Pomodoro segment ends naturally.
  * Browsers may block audio until the user has interacted with the page once.
  */
 export function playTimerChime(kind: TimerChimeKind): void {
@@ -69,11 +87,9 @@ export function playTimerChime(kind: TimerChimeKind): void {
   void ctx.resume().then(() => {
     const t = ctx.currentTime;
     if (kind === "focus_complete") {
-      playTone(ctx, 523.25, t, 0.35, 0.12);
-      playTone(ctx, 659.25, t + 0.12, 0.4, 0.1);
+      playFocusCompleteChime(ctx, t);
     } else {
-      playTone(ctx, 392, t, 0.3, 0.11);
-      playTone(ctx, 493.88, t + 0.1, 0.35, 0.09);
+      playBreakCompleteChime(ctx, t);
     }
   });
 }

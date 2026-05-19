@@ -60,3 +60,118 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Motion utilities — disabled when user prefers reduced motion */
+@layer utilities {
+  @keyframes pds-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pds-fade-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes pds-modal-backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pds-modal-panel-in {
+    from {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pds-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pds-toast-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  .pds-fade-in {
+    animation: pds-fade-in 180ms ease-out both;
+  }
+
+  .pds-fade-out {
+    animation: pds-fade-out 180ms ease-in both;
+  }
+
+  .pds-view-enter {
+    animation: pds-fade-in 180ms ease-out both;
+  }
+
+  .pds-modal-backdrop {
+    animation: pds-modal-backdrop-in 150ms ease-out both;
+  }
+
+  .pds-modal-panel {
+    animation: pds-modal-panel-in 180ms ease-out both;
+  }
+
+  .pds-toast-enter {
+    animation: pds-toast-in 200ms ease-out both;
+  }
+
+  .pds-toast-exit {
+    animation: pds-toast-out 200ms ease-in both;
+  }
+
+  .pds-timer-mode {
+    transition:
+      opacity 200ms ease,
+      max-height 200ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pds-fade-in,
+    .pds-fade-out,
+    .pds-view-enter,
+    .pds-modal-backdrop,
+    .pds-modal-panel,
+    .pds-toast-enter,
+    .pds-toast-exit,
+    .pds-timer-mode {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}

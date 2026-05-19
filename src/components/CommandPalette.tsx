@@ -281,14 +281,14 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh]"
+      className="pds-modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh]"
       role="presentation"
       onMouseDown={(e: MouseEvent) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-lg border border-pds-border bg-pds-panel shadow-xl"
+        className="pds-modal-panel w-full max-w-lg overflow-hidden rounded-lg border border-pds-border bg-pds-panel shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"

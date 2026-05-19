@@ -231,6 +231,10 @@ export function MeetingsView({
       </aside>
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto border-r border-pds-border">
+        <div
+          key={`${selectedId ?? "compose"}-${editing ? "edit" : "view"}`}
+          className="pds-fade-in flex min-h-0 min-w-0 flex-1 flex-col"
+        >
         {selectedId == null ? (
           <MeetingMode
             key={composeKey}
@@ -315,6 +319,7 @@ export function MeetingsView({
             </div>
           </div>
         )}
+        </div>
       </main>
 
       {meetingDetail && (

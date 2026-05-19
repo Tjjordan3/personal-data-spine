@@ -81,6 +81,9 @@ export default function App() {
     message: string;
     kind: "success" | "error";
   } | null>(null);
+  const [toastExiting, setToastExiting] = useState(false);
+  const toastHideRef = useRef<number | null>(null);
+  const toastExitRef = useRef<number | null>(null);
   const [subscriptionsAddOpen, setSubscriptionsAddOpen] = useState(false);
   const [projectsAddOpen, setProjectsAddOpen] = useState(false);
   const [projectsFocusId, setProjectsFocusId] = useState<string | null>(null);
@@ -94,11 +97,35 @@ export default function App() {
 
   const showToast = useCallback(
     (message: string, kind: "success" | "error") => {
+      if (toastHideRef.current != null) {
+        window.clearTimeout(toastHideRef.current);
+        toastHideRef.current = null;
+      }
+      if (toastExitRef.current != null) {
+        window.clearTimeout(toastExitRef.current);
+        toastExitRef.current = null;
+      }
+      setToastExiting(false);
       setToast({ message, kind });
-      window.setTimeout(() => setToast(null), 4000);
+      toastHideRef.current = window.setTimeout(() => {
+        setToastExiting(true);
+        toastExitRef.current = window.setTimeout(() => {
+          setToast(null);
+          setToastExiting(false);
+          toastExitRef.current = null;
+        }, 200);
+        toastHideRef.current = null;
+      }, 3800);
     },
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      if (toastHideRef.current != null) window.clearTimeout(toastHideRef.current);
+      if (toastExitRef.current != null) window.clearTimeout(toastExitRef.current);
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -271,7 +298,10 @@ export default function App() {
 
       {toast && (
         <p
+          role="status"
           className={`mx-4 mt-2 rounded px-3 py-2 text-xs ${
+            toastExiting ? "pds-toast-exit" : "pds-toast-enter"
+          } ${
             toast.kind === "success"
               ? "bg-emerald-950/60 text-emerald-300"
               : "bg-red-950/60 text-red-300"
@@ -281,6 +311,7 @@ export default function App() {
         </p>
       )}
 
+      <div key={view} className="pds-view-enter flex min-h-0 flex-1 flex-col">
       {view === "focus" && (
         <FocusView
           statsTick={focusStatsTick}
@@ -469,6 +500,7 @@ export default function App() {
           </Suspense>
         </main>
       )}
+      </div>
 
       <CommandPalette
         open={commandPaletteOpen}

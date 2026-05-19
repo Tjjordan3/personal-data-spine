@@ -27,6 +27,10 @@ export function FocusTimerBar() {
   return (
     <>
       <div className="sticky bottom-0 z-10 border-t border-pds-border bg-pds-panel/95 px-4 py-3 backdrop-blur-sm">
+        <div
+          key={isBreak ? "break" : "focus"}
+          className={`pds-timer-mode pds-fade-in ${isBreak ? "opacity-95" : "opacity-100"}`}
+        >
         {isBreak ? (
           <div className="flex flex-wrap items-center gap-3">
             <div>
@@ -170,16 +174,17 @@ export function FocusTimerBar() {
             </p>
           </div>
         )}
+        </div>
       </div>
 
       {timer.showTaskPicker && (
         <div
-          className="fixed inset-0 z-20 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          className="pds-modal-backdrop fixed inset-0 z-20 flex items-end justify-center bg-black/40 p-4 sm:items-center"
           role="dialog"
           aria-modal="true"
           aria-label="Pick a task"
         >
-          <div className="flex max-h-[70vh] w-full max-w-md flex-col rounded-lg border border-pds-border bg-pds-panel shadow-xl">
+          <div className="pds-modal-panel flex max-h-[70vh] w-full max-w-md flex-col rounded-lg border border-pds-border bg-pds-panel shadow-xl">
             <div className="flex items-center justify-between border-b border-pds-border px-4 py-3">
               <h3 className="text-sm font-semibold text-pds-text">Pick a task</h3>
               <button

@@ -83,14 +83,14 @@ export function LinkPickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-6 pt-[12vh]"
+      className="pds-modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-6 pt-[12vh]"
       role="dialog"
       aria-modal="true"
       aria-label="Link to item"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-pds-border bg-pds-panel shadow-xl"
+        className="pds-modal-panel w-full max-w-md rounded-lg border border-pds-border bg-pds-panel shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="border-b border-pds-border px-3 py-2">
