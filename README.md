@@ -6,7 +6,7 @@
 
 | Milestone | Archive | App version | GitHub tag |
 |-----------|---------|-------------|------------|
-| **v7 (active)** | branch **`v7`** · [V7.md](V7.md) | **0.3.2** | [`v0.3.2`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.3.2) (installers) |
+| **v7 (active)** | branch **`v7`** · [V7.md](V7.md) | **0.3.3** | [`v0.3.3`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.3.3) (installers) |
 | v6 (frozen) | `../personal-data-spine-v6/` · [V6.md](V6.md) | 0.2.0 | [`v6.0.0`](https://github.com/Tjjordan3/personal-data-spine/tree/v6.0.0) (milestone) · [`v0.2.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.2.0) (installer) |
 | v5 (frozen) | `../personal-data-spine-v5/` · [V5.md](V5.md) | — | [`v5.0.0`](https://github.com/Tjjordan3/personal-data-spine/tree/v5.0.0) (milestone) |
 | v4 (frozen) | `../personal-data-spine-v4/` · [V4.md](V4.md) | — | `v4.0.0` (milestone, local tag) |
@@ -21,7 +21,7 @@
 - **Installers** ship on **app version** tags (`v0.2.0`, `v0.3.2`, …) via [RELEASING.md](RELEASING.md) — **Windows** `.exe` and **macOS** universal `.dmg`. **Milestone** tags (`v6.0.0`, `v5.0.0`) freeze scope only — they do not run the Release workflow.
 - Older milestone branches were removed from GitHub to reduce clutter; history remains in `v7` and at the tagged commits.
 
-## v7 updates (app **0.3.2**, tag **v0.3.2**)
+## v7 updates (app **0.3.3**, tag **v0.3.3**)
 
 Shipped in v7.0+ (see [V7.md](V7.md) for backlog and v7.1 plans):
 
@@ -79,13 +79,13 @@ Pre-built installers are on **[GitHub Releases](https://github.com/Tjjordan3/per
 
 ### Windows
 
-- **Latest:** [`DonePath_0.3.2_x64-setup.exe`](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.2`)
+- **Latest:** [`DonePath_0.3.3_x64-setup.exe`](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.3`)
 - Older: `DonePath_0.2.0_x64-setup.exe` (`v0.2.0`)
 - SmartScreen may warn on unsigned builds → **More info → Run anyway**
 
 ### macOS (Apple Silicon + Intel)
 
-- **Latest:** `DonePath_0.3.2_universal.dmg` on [Releases](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.2`)
+- **Latest:** `DonePath_0.3.3_universal.dmg` on [Releases](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.3`)
 - First launch: **right-click → Open**, or **System Settings → Privacy & Security → Open Anyway** (unsigned build)
 - First-run guide: [docs/MACOS.md](docs/MACOS.md)
 
@@ -130,7 +130,7 @@ Pre-built installers are on **[GitHub Releases](https://github.com/Tjjordan3/per
 
 | | |
 |--|--|
-| **App version** | `0.3.2` (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) |
+| **App version** | `0.3.3` (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) |
 | **Active branch** | `v7` |
 | **Local DB** | Win: `%APPDATA%\com.tjord.personal-data-spine\personal_spine.db` · Mac: `~/Library/Application Support/com.tjord.personal-data-spine/personal_spine.db` |
 | **Publish installer** | Tag `v0.x.y` → [RELEASING.md](RELEASING.md) (Windows + macOS) |
