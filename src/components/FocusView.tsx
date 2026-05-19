@@ -142,17 +142,6 @@ function FocusViewBody({
             <p className="mt-1 text-pds-sm text-pds-muted">{summaryLine}</p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={toggleCapture}
-              className={`rounded-sm border px-3 py-1.5 text-pds-sm ${
-                captureOpen
-                  ? "border-pds-muted bg-pds-chip text-pds-text"
-                  : "border-pds-border text-pds-text hover:bg-pds-panel"
-              }`}
-            >
-              Quick capture
-            </button>
             {hasNextTask && (
               <button
                 type="button"

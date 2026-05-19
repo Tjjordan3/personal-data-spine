@@ -1,5 +1,13 @@
 use std::fs;
-use tauri::{Emitter, Manager};
+use tauri::{Emitter, Manager, RunEvent, WindowEvent};
+
+fn show_main_window(app: &tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.show();
+        let _ = win.unminimize();
+        let _ = win.set_focus();
+    }
+}
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 fn show_capture_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("capture") {
@@ -138,6 +146,17 @@ pub fn run() {
                 let _ = main_win.show();
                 let _ = main_win.unminimize();
                 let _ = main_win.set_focus();
+
+                let main_for_close = main_win.clone();
+                main_win.on_window_event(move |event| {
+                    if let WindowEvent::CloseRequested { api, .. } = event {
+                        #[cfg(target_os = "macos")]
+                        {
+                            api.prevent_close();
+                            let _ = main_for_close.hide();
+                        }
+                    }
+                });
             }
 
             let handle = app.handle().clone();
@@ -171,6 +190,16 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            match event {
+                RunEvent::Reopen { has_visible_windows, .. } => {
+                    if !has_visible_windows {
+                        show_main_window(app_handle);
+                    }
+                }
+                _ => {}
+            }
+        });
 }
