@@ -82,7 +82,8 @@ export function CommandPalette({
   actions,
 }: CommandPaletteProps) {
   const timer = useFocusTimer();
-  const { mounted, exiting } = useAnimatedPresence(open, MODAL_EXIT_MS);
+  const { mounted, exiting, entered } = useAnimatedPresence(open, MODAL_EXIT_MS);
+  const paletteVisible = entered && !exiting;
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [highlight, setHighlight] = useState(0);
@@ -283,21 +284,20 @@ export function CommandPalette({
 
   if (!mounted) return null;
 
-  const backdropClass = exiting
-    ? "pds-modal-backdrop-exit"
-    : "pds-modal-backdrop";
-  const panelClass = exiting ? "pds-modal-panel-exit" : "pds-modal-panel";
+  const fadeClass = paletteVisible
+    ? "pds-crossfade-visible"
+    : "pds-crossfade-hidden";
 
   return (
     <div
-      className={`${backdropClass} fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh]`}
+      className={`pds-crossfade-modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh] ${fadeClass}`}
       role="presentation"
       onMouseDown={(e: MouseEvent) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className={`${panelClass} w-full max-w-lg overflow-hidden rounded-lg border border-pds-border bg-pds-panel shadow-xl`}
+        className={`pds-crossfade-modal-panel w-full max-w-lg overflow-hidden rounded-lg border border-pds-border bg-pds-panel shadow-xl ${fadeClass}`}
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"

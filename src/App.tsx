@@ -26,6 +26,7 @@ import type { ItemType } from "./lib/db/types";
 import { getItemById, markItemsDone } from "./lib/db/items";
 import { searchWithFacets, type SearchResult } from "./lib/db/search";
 import type { Item } from "./lib/db/types";
+import { useViewCrossfade } from "./lib/useViewCrossfade";
 
 type View = AppView;
 
@@ -92,6 +93,7 @@ export default function App() {
   const [linkedToSelection, setLinkedToSelection] = useState(false);
   const [batchBusy, setBatchBusy] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const { displayView, visible: viewVisible } = useViewCrossfade(view);
 
   useCommandPaletteShortcut(() => setCommandPaletteOpen(true));
 
@@ -311,8 +313,12 @@ export default function App() {
         </p>
       )}
 
-      <div key={view} className="pds-view-enter flex min-h-0 flex-1 flex-col">
-      {view === "focus" && (
+      <div
+        className={`pds-crossfade flex min-h-0 flex-1 flex-col ${
+          viewVisible ? "pds-crossfade-visible" : "pds-crossfade-hidden"
+        }`}
+      >
+      {displayView === "focus" && (
         <FocusView
           statsTick={focusStatsTick}
           onToast={showToast}
@@ -341,7 +347,7 @@ export default function App() {
         />
       )}
 
-      {view === "inbox" && (
+      {displayView === "inbox" && (
         <div className="flex min-h-0 flex-1 flex-col">
           <SearchFacetsBar
             facets={facets}
@@ -457,7 +463,7 @@ export default function App() {
         </div>
       )}
 
-      {view === "subscriptions" && (
+      {displayView === "subscriptions" && (
         <Suspense fallback={<DeferredRouteFallback />}>
           <SubscriptionsView
             onToast={showToast}
@@ -467,7 +473,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {view === "projects" && (
+      {displayView === "projects" && (
         <Suspense fallback={<DeferredRouteFallback />}>
           <ProjectsView
             onToast={showToast}
@@ -479,7 +485,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {view === "meeting" && (
+      {displayView === "meeting" && (
         <main className="flex min-h-0 flex-1 overflow-hidden">
           <Suspense fallback={<DeferredRouteFallback />}>
             <MeetingsView
@@ -490,7 +496,7 @@ export default function App() {
         </main>
       )}
 
-      {view === "settings" && (
+      {displayView === "settings" && (
         <main className="min-h-0 flex-1 overflow-auto">
           <Suspense fallback={<DeferredRouteFallback />}>
             <SettingsPanel

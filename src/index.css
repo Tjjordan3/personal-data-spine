@@ -162,6 +162,40 @@ body {
   }
 }
 
+/* Opacity crossfade — transitions fire reliably in WebView2 on rAF after mount */
+.pds-crossfade {
+  transition: opacity var(--pds-motion-view) ease;
+}
+
+.pds-crossfade-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pds-crossfade-visible {
+  opacity: 1;
+}
+
+.pds-crossfade-modal-backdrop {
+  transition: opacity var(--pds-motion-modal-backdrop) ease-out;
+}
+
+.pds-crossfade-modal-panel {
+  transition:
+    opacity var(--pds-motion-modal-panel) cubic-bezier(0.22, 1, 0.36, 1),
+    transform var(--pds-motion-modal-panel) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pds-crossfade-modal-panel.pds-crossfade-hidden {
+  opacity: 0;
+  transform: scale(0.94) translateY(6px);
+}
+
+.pds-crossfade-modal-panel.pds-crossfade-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
 /* Motion utility classes */
 .pds-view-enter {
   animation: pds-view-enter var(--pds-motion-view) cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -205,6 +239,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .pds-crossfade,
+  .pds-crossfade-modal-backdrop,
+  .pds-crossfade-modal-panel,
   .pds-view-enter,
   .pds-fade-in,
   .pds-fade-out,

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
-/** Keep mounted while exit animation runs after `active` becomes false. */
+/** Keep mounted while exit transition runs after `active` becomes false. */
 export function useAnimatedPresence(
   active: boolean,
   exitDurationMs: number,
-): { mounted: boolean; exiting: boolean } {
+): { mounted: boolean; exiting: boolean; entered: boolean } {
   const [mounted, setMounted] = useState(active);
   const [exiting, setExiting] = useState(false);
+  const [entered, setEntered] = useState(active);
   const mountedRef = useRef(mounted);
 
   useEffect(() => {
@@ -17,11 +18,20 @@ export function useAnimatedPresence(
     if (active) {
       setMounted(true);
       setExiting(false);
-      return;
+      setEntered(false);
+      let inner = 0;
+      const outer = requestAnimationFrame(() => {
+        inner = requestAnimationFrame(() => setEntered(true));
+      });
+      return () => {
+        cancelAnimationFrame(outer);
+        cancelAnimationFrame(inner);
+      };
     }
 
     if (!mountedRef.current) return;
 
+    setEntered(false);
     setExiting(true);
     const id = window.setTimeout(() => {
       setMounted(false);
@@ -31,5 +41,5 @@ export function useAnimatedPresence(
     return () => window.clearTimeout(id);
   }, [active, exitDurationMs]);
 
-  return { mounted, exiting };
+  return { mounted, exiting, entered };
 }
