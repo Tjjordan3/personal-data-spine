@@ -4,41 +4,78 @@
 
 > The git checkout folder is still named `personal-data-spine` for continuity with earlier snapshots.
 
-- **v1 snapshot:** `../personal-data-spine-v1/` and [V1.md](V1.md)
-- **v2 snapshot (frozen):** `../personal-data-spine-v2/` and [V2.md](V2.md)
-- **v3 snapshot (frozen):** `../personal-data-spine-v3/` and [V3.md](V3.md)
-- **v4 snapshot (frozen):** `../personal-data-spine-v4/` and [V4.md](V4.md)
-- **v5 snapshot (frozen):** `../personal-data-spine-v5/` and [V5.md](V5.md)
-- **v6 snapshot (frozen):** `../personal-data-spine-v6/` and [V6.md](V6.md)
-- **v7 scope (active):** [V7.md](V7.md) on branch `v7`
+| Milestone | Branch / snapshot | App version | GitHub release tag |
+|-----------|-------------------|-------------|-------------------|
+| **v7 (active)** | `v7` · [V7.md](V7.md) | **0.3.0** | [`v0.3.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.3.0) |
+| v6 (frozen) | `v6` · `../personal-data-spine-v6/` · [V6.md](V6.md) | 0.2.0 | [`v0.2.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.2.0) |
+| v5 (frozen) | `v5` · `../personal-data-spine-v5/` · [V5.md](V5.md) | — | `v5.0.0` (milestone) |
+| v4 (frozen) | `v4` · `../personal-data-spine-v4/` · [V4.md](V4.md) | — | `v4.0.0` (milestone) |
+| v3 (frozen) | `../personal-data-spine-v3/` · [V3.md](V3.md) | — | — |
+| v2 (frozen) | `../personal-data-spine-v2/` · [V2.md](V2.md) | — | — |
+| v1 | `../personal-data-spine-v1/` · [V1.md](V1.md) | — | — |
 
-## v7 updates (0.3.0)
+## v7 updates (app **0.3.0**, tag **v0.3.0**)
+
+Shipped in v7.0 (see [V7.md](V7.md) for backlog and v7.1 plans):
 
 - **Link suggestions** — confirm before linking after meeting save; no silent graph links
 - **Focus spine** — project/meeting context on task rows; one click to open linked hub
-- **LLM firewall** — documented opt-in, local-by-default, Meetings-only rule
+- **LLM firewall** — documented opt-in, local-by-default, Meetings-only rule ([SECURITY.md](SECURITY.md), Settings)
 
-See [V7.md](V7.md) for full backlog.
+**Planned (v7.1):** persist graph show/hide + neighborhood scope; weekly rollup of completed tasks with outcomes.
 
-## v6 updates
+## v6 updates (app **0.2.0**, tag **v0.2.0**)
 
-- **Projects hub** — 3-column layout (list, detail, linked tasks) aligned with Meetings
-- **Subscriptions hub** — same 3-column pattern; renewal detail in center; Windows renewal toasts (Settings toggle, 7-day window)
-- **UI identity** — IBM Plex Sans, type scale, nav icons, milestone app icon, consistent emerald accents
-- **Graph view** — larger viewport, type icons on nodes, labels on focus/hover, optional “Show labels”
-- **Windows installer** — pre-built setup on [GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases) (`DonePath_*_x64-setup.exe`); see [RELEASING.md](RELEASING.md)
-- **Security & privacy** — local-only data, optional LLM; see [SECURITY.md](SECURITY.md)
+### Hubs (Meetings / Projects / Subscriptions parity)
+
+- **Projects hub** — 3-column layout (list, detail, linked tasks); sidebar task edit; add task to project; new project; project compose template; related-items panel and cross-links to Subscriptions/Inbox
+- **Subscriptions hub** — 3-column layout; catalog picker; renewal detail in center
+- **Renewal reminders** — local Windows toasts (7-day window, Settings toggle, deduped per day)
+
+### Daily flow & capture
+
+- **Snooze / reschedule** — shared actions on hub task rows
+- **Command palette** — go to project, new meeting from template, export backup
+- **Post-meeting save** — quick actions prompt after save
+- **Capture** — shared `CaptureForm`; floating capture window (close + resize); inline capture on Focus; tag suggestions (`TagAddField`, common tags) in capture and item edit
+
+### Power user
+
+- **ICS export** — active tasks with due dates (Settings, palette)
+- **Graph scope** — full graph vs selection neighborhood; graph default off in Inbox
+- **Duplicate item** — optional one-hop link copy
+- **Meeting templates** — user templates; duplicate last meeting
+- **Recurring tasks / subscriptions** — weekly/monthly/yearly metadata in Focus stream
+- **Markdown folder import** — `.md` → notes with `#imported` and path dedupe
+
+### Shell, graph, releases
+
+- **UI identity** — IBM Plex Sans, type scale, nav icons, milestone app icon, emerald accents
+- **Graph view** — larger viewport, type icons, legend, labels on focus/hover
+- **Windows installer** — GitHub Actions + [RELEASING.md](RELEASING.md); assets on Releases (not in git)
+- **Security docs** — [SECURITY.md](SECURITY.md); LLM privacy blurb in Settings
+
+## v5 features (milestone **v5.0.0**)
+
+- **Backup & data** — Settings: DB path, SQLite + JSON export/restore, last backup time
+- **Command palette** — `Ctrl+K` / `Cmd+K`, navigation, create, focus timer, search
+- **Focus actions** — Start / Done / Snooze / Reschedule / Log outcome; Start next
+- **Meetings hub** — split view, title metadata, linked-task sidebar edit, decisions parser, project on tasks
+- **Search & graph** — FTS5, link picker, linked-to-selection filter, spring layout
+- **Capture templates** — meeting + note templates; shortcuts in Settings
+- **Polish** — empty states, mark visible done, FTS performance
 
 ## Download (Windows)
 
 Pre-built installers are published on **[GitHub Releases](https://github.com/Tjjordan3/personal-data-spine/releases)** (not stored in the git tree).
 
-- Download `DonePath_*_x64-setup.exe` and run it.
+- **Latest:** [`DonePath_0.3.0_x64-setup.exe`](https://github.com/Tjjordan3/personal-data-spine/releases/latest) (tag `v0.3.0`)
+- Older: `DonePath_0.2.0_x64-setup.exe` (`v0.2.0`)
 - **Your data stays on your PC** — the installer does not include tasks or meetings from anyone else’s machine. Each user gets their own local database. Reinstalling on the same Windows user keeps existing data.
 - **Privacy:** optional meeting LLM sends note text to Ollama or OpenAI when you turn it on in Settings. The database is not encrypted at rest. See [SECURITY.md](SECURITY.md).
 - Build or publish yourself: [RELEASING.md](RELEASING.md).
 
-## v4 features (shipped)
+## v4 features (milestone **v4.0.0**)
 
 - **Pomodoro timer** — Focus tab work/break blocks, streaks, chimes, start from task
 - **Light mode contrast** — readable muted and body text in light theme
@@ -70,6 +107,13 @@ Pre-built installers are published on **[GitHub Releases](https://github.com/Tjj
 
 ## Development
 
+| | |
+|--|--|
+| **App version** | `0.3.0` (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) |
+| **Active branch** | `v7` |
+| **Local DB** | `%APPDATA%\com.tjord.personal-data-spine\personal_spine.db` |
+| **Publish installer** | Tag `v*` (e.g. `v0.3.0`) → [RELEASING.md](RELEASING.md) |
+
 From the **project root** (this folder):
 
 ```bash
@@ -78,6 +122,12 @@ npm run tauri dev
 ```
 
 `npm run dev` starts Vite only (browser at http://127.0.0.1:1420) and does **not** open the DonePath desktop window. Always use `npm run tauri dev` for the GUI.
+
+```bash
+npm run build    # typecheck + Vite
+npm test         # Vitest (e.g. meeting heuristic parser)
+npm run tauri build   # Windows installer under src-tauri/target/release/bundle/
+```
 
 ### Dev window blank or `tauri dev` exits immediately
 
