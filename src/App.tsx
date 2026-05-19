@@ -477,6 +477,7 @@ export default function App() {
         <Suspense fallback={<DeferredRouteFallback />}>
           <ProjectsView
             onToast={showToast}
+            onNavigateToFocus={() => setView("focus")}
             initialShowAdd={projectsAddOpen}
             onInitialShowAddConsumed={() => setProjectsAddOpen(false)}
             initialSelectedId={projectsFocusId}

@@ -1,4 +1,4 @@
-# DonePath (v5)
+# DonePath (v6)
 
 **DonePath** is a local-first desktop app for tasks, meetings, and focus on your computer. Built with Tauri 2, React, TypeScript, and SQLite.
 
@@ -8,7 +8,8 @@
 - **v2 snapshot (frozen):** `../personal-data-spine-v2/` and [V2.md](V2.md)
 - **v3 snapshot (frozen):** `../personal-data-spine-v3/` and [V3.md](V3.md)
 - **v4 snapshot (frozen):** `../personal-data-spine-v4/` and [V4.md](V4.md)
-- **v5 scope (active):** [V5.md](V5.md)
+- **v5 snapshot (frozen):** `../personal-data-spine-v5/` and [V5.md](V5.md)
+- **v6 scope (active):** [V6.md](V6.md)
 
 ## v4 features (shipped)
 
