@@ -4,15 +4,22 @@
 
 > The git checkout folder is still named `personal-data-spine` for continuity with earlier snapshots.
 
-| Milestone | Branch / snapshot | App version | GitHub release tag |
-|-----------|-------------------|-------------|-------------------|
-| **v7 (active)** | `v7` · [V7.md](V7.md) | **0.3.0** | [`v0.3.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.3.0) |
-| v6 (frozen) | `v6` · `../personal-data-spine-v6/` · [V6.md](V6.md) | 0.2.0 | [`v0.2.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.2.0) |
-| v5 (frozen) | `v5` · `../personal-data-spine-v5/` · [V5.md](V5.md) | — | `v5.0.0` (milestone) |
-| v4 (frozen) | `v4` · `../personal-data-spine-v4/` · [V4.md](V4.md) | — | `v4.0.0` (milestone) |
+| Milestone | Archive | App version | GitHub tag |
+|-----------|---------|-------------|------------|
+| **v7 (active)** | branch **`v7`** · [V7.md](V7.md) | **0.3.0** | [`v0.3.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.3.0) (installer) |
+| v6 (frozen) | `../personal-data-spine-v6/` · [V6.md](V6.md) | 0.2.0 | [`v6.0.0`](https://github.com/Tjjordan3/personal-data-spine/tree/v6.0.0) (milestone) · [`v0.2.0`](https://github.com/Tjjordan3/personal-data-spine/releases/tag/v0.2.0) (installer) |
+| v5 (frozen) | `../personal-data-spine-v5/` · [V5.md](V5.md) | — | [`v5.0.0`](https://github.com/Tjjordan3/personal-data-spine/tree/v5.0.0) (milestone) |
+| v4 (frozen) | `../personal-data-spine-v4/` · [V4.md](V4.md) | — | `v4.0.0` (milestone, local tag) |
 | v3 (frozen) | `../personal-data-spine-v3/` · [V3.md](V3.md) | — | — |
 | v2 (frozen) | `../personal-data-spine-v2/` · [V2.md](V2.md) | — | — |
 | v1 | `../personal-data-spine-v1/` · [V1.md](V1.md) | — | — |
+
+### Branching and archive policy
+
+- **Active development** uses a single git branch: **`v7`** (GitHub default branch).
+- **Frozen milestones** are preserved with **git tags** (e.g. `v6.0.0`, `v5.0.0`) and **sibling snapshot folders** on disk (`../personal-data-spine-v6/`, etc.), not long-lived `v4`/`v5`/`v6` branches.
+- **Installers** ship on **`v*`** release tags (`v0.2.0`, `v0.3.0`) via [RELEASING.md](RELEASING.md); milestone tags mark scope freezes without replacing installer tags.
+- Older milestone branches were removed from GitHub to reduce clutter; history remains in `v7` and at the tagged commits.
 
 ## v7 updates (app **0.3.0**, tag **v0.3.0**)
 
